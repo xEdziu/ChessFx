@@ -1,18 +1,18 @@
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
-*.iml
-*.ipr
-.idea/*
-target/*
-
+# Maven Wrapper
 mvnw
 mvnw.cmd
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!**/maven-wrapper.jar
