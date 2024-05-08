@@ -27,6 +27,9 @@ public class ChessApplication extends Application {
         root.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));  // Set background color
         primaryStage.setScene(new Scene(root));
 
+        primaryStage.setMinHeight(700);
+        primaryStage.setMinWidth(700);
+
         primaryStage.show();
     }
 
