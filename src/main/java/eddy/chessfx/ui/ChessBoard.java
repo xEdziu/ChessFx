@@ -11,7 +11,7 @@ public class ChessBoard extends GridPane {
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
                 Rectangle square = new Rectangle(75, 75);
-                square.setFill((row + col) % 2 == 0 ? Color.WHITE : Color.BLACK);
+                square.setFill((row + col) % 2 == 0 ? Color.WHITE : Color.rgb(0, 0, 0, 0.5));
                 this.add(square, col, row);
             }
         }
