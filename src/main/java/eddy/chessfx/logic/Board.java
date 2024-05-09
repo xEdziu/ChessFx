@@ -1,6 +1,5 @@
 package eddy.chessfx.logic;
 
-import eddy.chessfx.pieces.King;
 import eddy.chessfx.pieces.Piece;
 import java.util.List;
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ public class Board {
                 board[move.getEndX()][move.getEndY()].isWhite() != board[move.getStartX()][move.getStartY()].isWhite();
     }
 
-    private boolean isMoveWithinBoard(int x, int y) {
+    public boolean isMoveWithinBoard(int x, int y) {
         return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 
@@ -83,7 +82,7 @@ public class Board {
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 Piece piece = board[x][y];
-                if (piece instanceof King && piece.isWhite() == isWhite) {
+                if (piece instanceof eddy.chessfx.pieces.King && piece.isWhite() == isWhite) {
                     return isSquareThreatened(x, y, isWhite);
                 }
             }
@@ -118,19 +117,21 @@ public class Board {
         Piece king = board[row][kingCol];
         Piece rook = board[row][rookCol];
 
-        if (king == null || rook == null || king.hasMoved() || rook.hasMoved()) return false;
+        if (!(king instanceof eddy.chessfx.pieces.King) || !(rook instanceof eddy.chessfx.pieces.Rook)) return false;
+        if (king.hasMoved() || rook.hasMoved()) return false;
 
-        if (board[row][kingCol] == null || board[row][rookCol] == null) return false;
-        for (int i = 1; i < Math.abs(rookCol - kingCol); i++) {
-            int col = kingCol + i * direction;
-            if (board[row][col] != null) return false;
+        for (int col = Math.min(kingCol, rookCol) + 1; col < Math.max(kingCol, rookCol); col++) {
+            if (board[row][col] != null || isSquareThreatened(row, col, !isWhite)) return false;
         }
-        board[row][kingCol + 2 * direction] = board[row][kingCol];
+
+        // Move the king and the rook
         board[row][kingCol] = null;
-        board[row][kingCol + direction] = board[row][rookCol];
         board[row][rookCol] = null;
+        board[row][kingCol + 2 * direction] = king;
+        board[row][kingCol + direction] = rook;
         return true;
     }
+
 
     public boolean isCheckmate(boolean isWhite) {
         if (!isKingInCheck(isWhite)) return false;

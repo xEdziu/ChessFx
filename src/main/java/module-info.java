@@ -1,6 +1,9 @@
 module eddy.chessfx {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
+    requires batik.transcoder;
+    requires javafx.swing;
 
 
     opens eddy.chessfx to javafx.fxml;

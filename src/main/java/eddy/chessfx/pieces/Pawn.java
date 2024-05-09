@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Pawn extends Piece {
     public Pawn(boolean isWhite) {
-        super("../resources/eddy/chessfx/pieces/" + (isWhite ? "white-pawn.png" : "black-pawn.png") + ".png", isWhite);
+        super("/images/pieces/pawn-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
     @Override

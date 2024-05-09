@@ -1,5 +1,6 @@
 package eddy.chessfx.ui;
 
+import eddy.chessfx.logic.Board;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -19,7 +20,8 @@ public class ChessApplication extends Application {
 
         StackPane root = new StackPane();  // StackPane automatically centers its children
         root.setPrefSize(700, 700);
-        ChessBoard chessBoard = new ChessBoard();
+        Board board = new Board();
+        ChessBoard chessBoard = new ChessBoard(board);
         chessBoard.setAlignment(Pos.CENTER);  // Center chess board
 
         root.getChildren().add(chessBoard);  // Add chess board directly to the StackPane

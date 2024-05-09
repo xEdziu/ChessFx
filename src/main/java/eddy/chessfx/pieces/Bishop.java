@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Bishop extends Piece {
     public Bishop(boolean isWhite) {
-        super("../resources/eddy/chessfx/pieces/" + (isWhite ? "white-bishop.png" : "black-bishop.png") + ".png", isWhite);
+        super("/images/pieces/bishop-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
     @Override

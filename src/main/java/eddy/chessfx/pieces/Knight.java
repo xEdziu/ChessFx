@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Knight extends Piece {
     public Knight(boolean isWhite) {
-        super("../resources/eddy/chessfx/pieces/" + (isWhite ? "white-knight.png" : "black-knight.png") + ".png", isWhite);
+        super("/images/pieces/knight-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Rook extends Piece {
     public Rook(boolean isWhite) {
-        super("../resources/eddy/chessfx/pieces/" + (isWhite ? "white-rook.png" : "black-rook.png") + ".png", isWhite);
+        super("/images/pieces/rook-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
     @Override
