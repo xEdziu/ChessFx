@@ -92,8 +92,8 @@ public class ChessBoard extends GridPane {
         System.out.println("Piece X:  " + piece.getPieceX() + " Piece Y: " + piece.getPieceY());
         Integer colIndex = GridPane.getColumnIndex(source);
         Integer rowIndex = GridPane.getRowIndex(source);
-        int newX = colIndex != null ? colIndex : 0;  // Set 0 as default value if colIndex is null
-        int newY = rowIndex != null ? rowIndex : 0;  // Set 0 as default value if rowIndex is null
+        int newX = piece.getPieceX();
+        int newY = piece.getPieceY();
 
         // Reset original square color
         resetSquareColor(piece.getPieceX(), piece.getPieceY());

@@ -7,11 +7,21 @@ import java.util.ArrayList;
 public class Board {
     private final Piece[][] board;  // The chessboard as a 8x8 array of pieces
     private final List<Move> moveHistory;  // History of moves
+    private boolean whiteTurn;  // true if it is white's turn, false
 
     public Board() {
         this.board = new Piece[8][8];
         this.moveHistory = new ArrayList<>();
         setupInitialBoard();
+        setWhiteTurn(true);
+    }
+
+    boolean isWhiteTurn() {
+        return whiteTurn;
+    }
+
+    public void setWhiteTurn(boolean whiteTurn) {
+        this.whiteTurn = whiteTurn;
     }
 
     private void setupInitialBoard() {

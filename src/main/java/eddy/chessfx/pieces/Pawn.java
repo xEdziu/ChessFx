@@ -14,15 +14,16 @@ public class Pawn extends Piece {
     @Override
     public List<Move> getPossibleMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
-        int direction = isWhite() ? 1 : -1;  // White pawns move up, black pawns move down
+        // White pawns move right, black pawns move left
+        int direction = isWhite() ? 1 : -1;
 
         // Move forward by one square if the square is empty
-        if (board.isMoveWithinBoard(x, y + direction) && !board.isSquareOccupied(x, y + direction)) {
-            moves.add(new Move(x, y, x, y + direction, this, null));
+        if (board.isMoveWithinBoard(x + direction, y) && !board.isSquareOccupied(x+ direction, y )) {
+            moves.add(new Move(x, y, x + direction, y, this, null));
             // Move forward by two squares if the pawn is on its starting square
             if ((isWhite() && y == 1) || (!isWhite() && y == 6)) {
-                if (!board.isSquareOccupied(x, y + 2 * direction)) {
-                    moves.add(new Move(x, y, x, y + 2 * direction, this, null));
+                if (!board.isSquareOccupied(x + 2 * direction, y )) {
+                    moves.add(new Move(x, y, x + 2 * direction, y , this, null));
                 }
             }
         }
