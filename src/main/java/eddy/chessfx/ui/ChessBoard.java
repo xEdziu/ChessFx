@@ -30,7 +30,7 @@ public class ChessBoard extends GridPane {
             for (int col = 0; col < SIZE; col++) {
                 StackPane cell = new StackPane();
                 Rectangle square = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-                square.setFill((row + col) % 2 == 0 ? Color.WHITE : Color.GRAY);
+                square.setFill((row + col) % 2 == 0 ? Color.GRAY : Color.WHITE);
                 squares[row][col] = square;
                 cell.getChildren().add(square);
                 this.add(cell, col, row);
@@ -116,7 +116,7 @@ public class ChessBoard extends GridPane {
     private void resetSquareColor(int x, int y) {
         Rectangle square = squares[y][x];
         square.setEffect(null);
-        square.setFill((y + x) % 2 == 0 ? Color.WHITE : Color.GRAY);
+        square.setFill((y + x) % 2 != 0 ? Color.WHITE : Color.GRAY);
     }
 
     private void updateUIAfterMove(Piece piece, int newX, int newY, Piece targetPiece) {
@@ -137,7 +137,7 @@ public class ChessBoard extends GridPane {
             for (int col = 0; col < SIZE; col++) {
                 Rectangle square = squares[row][col];
                 square.setEffect(null);
-                square.setFill((row + col) % 2 == 0 ? Color.WHITE : Color.GRAY);
+                square.setFill((row + col) % 2 != 0 ? Color.WHITE : Color.GRAY);
             }
         }
     }

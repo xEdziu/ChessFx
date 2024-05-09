@@ -33,8 +33,8 @@ public class Board {
         board[0][2] = new eddy.chessfx.pieces.Bishop(true);
         board[0][2].setPosition(0, 2);
         board[0][3] = new eddy.chessfx.pieces.Queen(true);
-        board[0][3].setPosition(0, 3);
         board[0][4] = new eddy.chessfx.pieces.King(true);
+        board[0][3].setPosition(0, 3);
         board[0][4].setPosition(0, 4);
         board[0][5] = new eddy.chessfx.pieces.Bishop(true);
         board[0][5].setPosition(0, 5);
@@ -55,8 +55,8 @@ public class Board {
         board[7][2] = new eddy.chessfx.pieces.Bishop(false);
         board[7][2].setPosition(7, 2);
         board[7][3] = new eddy.chessfx.pieces.Queen(false);
-        board[7][3].setPosition(7, 3);
         board[7][4] = new eddy.chessfx.pieces.King(false);
+        board[7][3].setPosition(7, 3);
         board[7][4].setPosition(7, 4);
         board[7][5] = new eddy.chessfx.pieces.Bishop(false);
         board[7][5].setPosition(7, 5);
