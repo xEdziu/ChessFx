@@ -17,28 +17,46 @@ public class Board {
     private void setupInitialBoard() {
         // Set up white pieces
         board[0][0] = new eddy.chessfx.pieces.Rook(true);
+        board[0][0].setPosition(0, 0);
         board[0][1] = new eddy.chessfx.pieces.Knight(true);
+        board[0][1].setPosition(0, 1);
         board[0][2] = new eddy.chessfx.pieces.Bishop(true);
+        board[0][2].setPosition(0, 2);
         board[0][3] = new eddy.chessfx.pieces.Queen(true);
+        board[0][3].setPosition(0, 3);
         board[0][4] = new eddy.chessfx.pieces.King(true);
+        board[0][4].setPosition(0, 4);
         board[0][5] = new eddy.chessfx.pieces.Bishop(true);
+        board[0][5].setPosition(0, 5);
         board[0][6] = new eddy.chessfx.pieces.Knight(true);
+        board[0][6].setPosition(0, 6);
         board[0][7] = new eddy.chessfx.pieces.Rook(true);
+        board[0][7].setPosition(0, 7);
         for (int i = 0; i < 8; i++) {
             board[1][i] = new eddy.chessfx.pieces.Pawn(true);
+            board[1][i].setPosition(1, i);
         }
 
         // Set up black pieces
         board[7][0] = new eddy.chessfx.pieces.Rook(false);
+        board[7][0].setPosition(7, 0);
         board[7][1] = new eddy.chessfx.pieces.Knight(false);
+        board[7][1].setPosition(7, 1);
         board[7][2] = new eddy.chessfx.pieces.Bishop(false);
+        board[7][2].setPosition(7, 2);
         board[7][3] = new eddy.chessfx.pieces.Queen(false);
+        board[7][3].setPosition(7, 3);
         board[7][4] = new eddy.chessfx.pieces.King(false);
+        board[7][4].setPosition(7, 4);
         board[7][5] = new eddy.chessfx.pieces.Bishop(false);
+        board[7][5].setPosition(7, 5);
         board[7][6] = new eddy.chessfx.pieces.Knight(false);
+        board[7][6].setPosition(7, 6);
         board[7][7] = new eddy.chessfx.pieces.Rook(false);
+        board[7][7].setPosition(7, 7);
         for (int i = 0; i < 8; i++) {
             board[6][i] = new eddy.chessfx.pieces.Pawn(false);
+            board[6][i].setPosition(6, i);
         }
     }
 
@@ -54,7 +72,7 @@ public class Board {
         return false;
     }
 
-    private boolean validateMove(Move move) {
+    public boolean validateMove(Move move) {
         if (!isMoveWithinBoard(move.getStartX(), move.getStartY()) ||
                 !isMoveWithinBoard(move.getEndX(), move.getEndY())) {
             return false;
