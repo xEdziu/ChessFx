@@ -8,6 +8,7 @@ public class Board {
     private final Piece[][] board;  // The chessboard as a 8x8 array of pieces
     private final List<Move> moveHistory;  // History of moves
     private boolean whiteTurn;  // true if it is white's turn, false
+    private Move lastMove;  // The last move made
 
     public Board() {
         this.board = new Piece[8][8];
@@ -16,7 +17,7 @@ public class Board {
         setWhiteTurn(true);
     }
 
-    boolean isWhiteTurn() {
+    public boolean isWhiteTurn() {
         return whiteTurn;
     }
 
@@ -70,6 +71,10 @@ public class Board {
         }
     }
 
+    public Move getLastMove() {
+        return lastMove;
+    }
+
     public boolean makeMove(Move move) {
         if (validateMove(move)) {
             Piece piece = board[move.getStartX()][move.getStartY()];
@@ -77,6 +82,11 @@ public class Board {
             board[move.getStartX()][move.getStartY()] = null;
             moveHistory.add(move);
             piece.setHasMoved(true);
+            lastMove = move;
+            setWhiteTurn(!isWhiteTurn());
+            if (piece instanceof eddy.chessfx.pieces.Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1 && !isSquareOccupied(move.getEndX(), move.getEndY())){  // En passant capture
+                board[move.getStartX()][move.getEndY()] = null; // Remove the captured pawn
+            }
             return true;
         }
         return false;

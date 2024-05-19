@@ -5,9 +5,6 @@ import eddy.chessfx.logic.Move;
 import eddy.chessfx.utils.BufferedImageTranscoder;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import javafx.embed.swing.SwingFXUtils;
@@ -34,7 +31,6 @@ public abstract class Piece extends ImageView {
         this.setFitWidth(64);
         this.setFitHeight(64);
         this.setPreserveRatio(true);
-        initDragAndDrop();
     }
 
     private Image getConstructorImage(String imagePath) throws TranscoderException {
@@ -44,26 +40,6 @@ public abstract class Piece extends ImageView {
         trans.transcode(transIn, null);
         return SwingFXUtils.toFXImage(trans.getBufferedImage(), null);
     }
-
-    private void initDragAndDrop() {
-        this.setPickOnBounds(true);
-        this.setOnDragDetected(event -> {
-            ClipboardContent content = new ClipboardContent();
-            content.putString(this.x + "," + this.y);  // Store the current position
-            Dragboard db = this.startDragAndDrop(TransferMode.MOVE);
-            db.setContent(content);
-            event.consume();
-        });
-
-        this.setOnDragDone(event -> {
-            if (event.getTransferMode() == TransferMode.MOVE) {
-                this.setTranslateX(0);
-                this.setTranslateY(0);
-            }
-            event.consume();
-        });
-    }
-
 
     public void setHasMoved(boolean hasMoved) {
         this.hasMoved = hasMoved;
