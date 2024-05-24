@@ -42,48 +42,39 @@ public class Board {
     }
 
     private void setupInitialBoard() {
-        // Set up white pieces
-        board[0][0] = new eddy.chessfx.pieces.Rook(true);
-        board[0][0].setPosition(0, 0);
-        board[0][1] = new eddy.chessfx.pieces.Knight(true);
-        board[0][1].setPosition(0, 1);
-        board[0][2] = new eddy.chessfx.pieces.Bishop(true);
-        board[0][2].setPosition(0, 2);
-        board[0][3] = new eddy.chessfx.pieces.Queen(true);
-        board[0][4] = new eddy.chessfx.pieces.King(true);
-        board[0][3].setPosition(0, 3);
-        board[0][4].setPosition(0, 4);
-        board[0][5] = new eddy.chessfx.pieces.Bishop(true);
-        board[0][5].setPosition(0, 5);
-        board[0][6] = new eddy.chessfx.pieces.Knight(true);
-        board[0][6].setPosition(0, 6);
-        board[0][7] = new eddy.chessfx.pieces.Rook(true);
-        board[0][7].setPosition(0, 7);
-        for (int i = 0; i < 8; i++) {
-            board[1][i] = new eddy.chessfx.pieces.Pawn(true);
-            board[1][i].setPosition(1, i);
-        }
-
         // Set up black pieces
-        board[7][0] = new eddy.chessfx.pieces.Rook(false);
-        board[7][0].setPosition(7, 0);
-        board[7][1] = new eddy.chessfx.pieces.Knight(false);
-        board[7][1].setPosition(7, 1);
-        board[7][2] = new eddy.chessfx.pieces.Bishop(false);
-        board[7][2].setPosition(7, 2);
-        board[7][3] = new eddy.chessfx.pieces.Queen(false);
-        board[7][4] = new eddy.chessfx.pieces.King(false);
-        board[7][3].setPosition(7, 3);
-        board[7][4].setPosition(7, 4);
-        board[7][5] = new eddy.chessfx.pieces.Bishop(false);
-        board[7][5].setPosition(7, 5);
-        board[7][6] = new eddy.chessfx.pieces.Knight(false);
-        board[7][6].setPosition(7, 6);
-        board[7][7] = new eddy.chessfx.pieces.Rook(false);
-        board[7][7].setPosition(7, 7);
         for (int i = 0; i < 8; i++) {
-            board[6][i] = new eddy.chessfx.pieces.Pawn(false);
-            board[6][i].setPosition(6, i);
+            board[i][1] = new Pawn(false);
+        }
+        board[0][0] = new Rook(false);
+        board[1][0] = new Knight(false);
+        board[2][0] = new Bishop(false);
+        board[3][0] = new Queen(false);
+        board[4][0] = new King(false);
+        board[5][0] = new Bishop(false);
+        board[6][0] = new Knight(false);
+        board[7][0] = new Rook(false);
+
+        // Set up white pieces
+        for (int i = 0; i < 8; i++) {
+            board[i][6] = new Pawn(true);
+        }
+        board[0][7] = new Rook(true);
+        board[1][7] = new Knight(true);
+        board[2][7] = new Bishop(true);
+        board[3][7] = new Queen(true);
+        board[4][7] = new King(true);
+        board[5][7] = new Bishop(true);
+        board[6][7] = new Knight(true);
+        board[7][7] = new Rook(true);
+
+        // Set pieces' positions
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                if (board[x][y] != null) {
+                    board[x][y].setPosition(x, y);
+                }
+            }
         }
     }
 
@@ -95,6 +86,20 @@ public class Board {
         if (validateMove(move)) {
             Piece piece = board[move.getStartX()][move.getStartY()];
             Piece targetPiece = board[move.getEndX()][move.getEndY()];
+
+            // Check for castling
+            if (piece instanceof King && Math.abs(move.getStartX() - move.getEndX()) == 2) {
+                int rookX = move.getEndX() > move.getStartX() ? 7 : 0;
+                int rookY = move.getStartY();
+                Piece rook = board[rookX][rookY];
+                board[move.getEndX() > move.getStartX() ? 5 : 3][rookY] = rook;
+                board[rookX][rookY] = null;
+                rook.setPosition(move.getEndX() > move.getStartX() ? 5 : 3, rookY);
+                rook.setHasMoved(true);
+                piece.setHasMoved(true);
+                move.setCastlingMove(true);
+            }
+
             board[move.getEndX()][move.getEndY()] = piece;
             board[move.getStartX()][move.getStartY()] = null;
             moveHistory.add(move);
@@ -103,6 +108,7 @@ public class Board {
                 board[move.getStartX()][move.getStartY()] = piece;
                 board[move.getEndX()][move.getEndY()] = targetPiece;
                 moveHistory.remove(move);
+                piece.setHasMoved(false);
                 return false;
             }
             piece.setHasMoved(true);
@@ -142,24 +148,50 @@ public class Board {
     }
 
     public boolean isKingInCheck(boolean isWhite) {
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                Piece piece = board[x][y];
-                if (piece instanceof eddy.chessfx.pieces.King && piece.isWhite() == isWhite) {
-                    return isSquareThreatened(x, y, isWhite);
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            Piece piece = board[x][y];
+            if (piece instanceof King && piece.isWhite() == isWhite) {
+                return isSquareThreatened(x, y, !isWhite);
+            }
+        }
+    }
+    return false;
+}
+
+public boolean isCheckmate(boolean isWhite) {
+    if (!isKingInCheck(isWhite)) return false;
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            Piece piece = board[x][y];
+            if (piece != null && piece.isWhite() == isWhite) {
+                List<Move> possibleMoves = piece.getPossibleMoves(this, x, y);
+                for (Move move : possibleMoves) {
+                    Piece temp = board[move.getEndX()][move.getEndY()];
+                    board[move.getEndX()][move.getEndY()] = piece;
+                    board[x][y] = null;
+                    if (!isKingInCheck(isWhite)) {
+                        board[x][y] = piece;
+                        board[move.getEndX()][move.getEndY()] = temp;
+                        return false;
+                    }
+                    board[x][y] = piece;
+                    board[move.getEndX()][move.getEndY()] = temp;
                 }
             }
         }
-        return false;
     }
+    return true;
+}
 
     private boolean isSquareThreatened(int x, int y, boolean isWhite) {
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Piece piece = board[i][j];
-                if (piece != null && piece.isWhite() != isWhite) {
-                    List<Move> possibleMoves = piece.getPossibleMoves(this, i, j);
-                    for (Move move : possibleMoves) {
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece piece = getPiece(i, j);
+            if (piece != null && piece.isWhite() == isWhite) {
+                if (!(piece instanceof King)) {
+                    List<Move> moves = piece.getPossibleMoves(this, i, j);
+                    for (Move move : moves) {
                         if (move.getEndX() == x && move.getEndY() == y) {
                             return true;
                         }
@@ -167,59 +199,9 @@ public class Board {
                 }
             }
         }
-        return false;
     }
-
-    public boolean castle(boolean isWhite, boolean kingSide) {
-        if (isKingInCheck(isWhite)) return false;
-        int row = isWhite ? 7 : 0;
-        int kingCol = 4;
-        int rookCol = kingSide ? 7 : 0;
-        int direction = kingSide ? 1 : -1;
-
-        Piece king = board[row][kingCol];
-        Piece rook = board[row][rookCol];
-
-        if (!(king instanceof eddy.chessfx.pieces.King) || !(rook instanceof eddy.chessfx.pieces.Rook)) return false;
-        if (king.hasMoved() || rook.hasMoved()) return false;
-
-        for (int col = Math.min(kingCol, rookCol) + 1; col < Math.max(kingCol, rookCol); col++) {
-            if (board[row][col] != null || isSquareThreatened(row, col, !isWhite)) return false;
-        }
-
-        // Move the king and the rook
-        board[row][kingCol] = null;
-        board[row][rookCol] = null;
-        board[row][kingCol + 2 * direction] = king;
-        board[row][kingCol + direction] = rook;
-        return true;
-    }
-
-
-    public boolean isCheckmate(boolean isWhite) {
-        if (!isKingInCheck(isWhite)) return false;
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                Piece piece = board[x][y];
-                if (piece != null && piece.isWhite() == isWhite) {
-                    List<Move> possibleMoves = piece.getPossibleMoves(this, x, y);
-                    for (Move move : possibleMoves) {
-                        Piece temp = board[move.getEndX()][move.getEndY()];
-                        board[move.getEndX()][move.getEndY()] = piece;
-                        board[x][y] = null;
-                        if (!isKingInCheck(isWhite)) {
-                            board[x][y] = piece;
-                            board[move.getEndX()][move.getEndY()] = temp;
-                            return false;
-                        }
-                        board[x][y] = piece;
-                        board[move.getEndX()][move.getEndY()] = temp;
-                    }
-                }
-            }
-        }
-        return true;
-    }
+    return false;
+}
 
     public String getGameInChessNotation() {
         StringBuilder notation = new StringBuilder();
@@ -280,32 +262,38 @@ public class Board {
         String captureNotation = move.getPieceCaptured() != null ? "x" : "";
         String destination = getSquareNotation(move.getEndX(), move.getEndY());
 
+        // Check for castling
+        if (pieceMoved instanceof King && Math.abs(move.getStartX() - move.getEndX()) == 2) {
+            return move.getEndX() > move.getStartX() ? "O-O" : "O-O-O";
+        }
+
         // Check for ambiguity
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 Piece piece = getPiece(x, y);
-                if (piece != null && piece.getClass().equals(pieceMoved.getClass()) && piece.isWhite() == pieceMoved.isWhite() && !(x == move.getStartX() && y == move.getStartY())) {
-                    List<Move> moves = piece.getPossibleMoves(this, x, y);
-                    for (Move possibleMove : moves) {
-                        if (possibleMove.getEndX() == move.getEndX() && possibleMove.getEndY() == move.getEndY()) {
-                            // If the pieces are in the same row
-                            if (move.getStartX() == x) {
-                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
-                            }
-                            // If the pieces are in the same column
-                            else if (move.getStartY() == y) {
-                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(1);
-                            }
-                            // If the pieces are in different rows and columns
-                            else {
-                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
-                            }
-                        }
+                if (piece == null || !piece.getClass().equals(pieceMoved.getClass()) || piece.isWhite() != pieceMoved.isWhite() || x == move.getStartX() && y == move.getStartY()) {
+                    continue;
+                }
+                List<Move> moves = piece.getPossibleMoves(this, x, y);
+                for (Move possibleMove : moves) {
+                    if (possibleMove.getEndX() != move.getEndX() || possibleMove.getEndY() != move.getEndY()) {
+                        continue;
+                    }
+                    // If the pieces are in the same row
+                    if (move.getStartX() == x) {
+                        pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
+                    }
+                    // If the pieces are in the same column
+                    else if (move.getStartY() == y) {
+                        pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(1);
+                    }
+                    // If the pieces are in different rows and columns
+                    else {
+                        pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
                     }
                 }
             }
         }
-
         return pieceNotation + captureNotation + destination;
     }
 

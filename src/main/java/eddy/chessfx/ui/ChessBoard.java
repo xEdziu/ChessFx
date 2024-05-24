@@ -41,7 +41,7 @@ public class ChessBoard extends GridPane {
             for (int col = 0; col < SIZE; col++) {
                 StackPane cell = new StackPane();
                 Rectangle square = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-                square.setFill((row + col) % 2 == 0 ? Color.GRAY : Color.WHITE);
+                square.setFill((row + col) % 2 == 0 ? Color.WHITE : Color.GRAY);
                 square.setStroke(Color.rgb(0, 0, 0, 0.5));
                 squares[row][col] = square;
                 cell.getChildren().add(square);
@@ -152,7 +152,21 @@ public class ChessBoard extends GridPane {
         Piece targetPiece = chessBoard.getPiece(newX, newY);
         Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece);
 
+        System.out.println("Move: " + piece.getClass().getSimpleName() + " from " + piece.getPieceX() + ", " + piece.getPieceY() + " to " + newX + ", " + newY);
+        System.out.println("Where actual X and Y are: " + piece.getPieceX() + ", " + piece.getPieceY() + " and new are " + newX + ", " + newY);
+
         if (chessBoard.validateMove(proposedMove) && chessBoard.makeMove(proposedMove)) {
+            // Check if the move was a castling move
+
+            if (proposedMove.isCastlingMove()) {
+                int rookNewX = newX > piece.getPieceX() ? newX - 1 : newX + 1;  // Rook's new position
+                Piece rook = chessBoard.getPiece(rookNewX, newY);
+                System.out.println("Rook new position: " + rookNewX + ", " + newY);
+                rook.setPosition(rookNewX, newY);
+                updateUIAfterMove(rook, rookNewX, newY, null);
+                System.out.println("Castling move!");
+                System.out.println("Rook pos from object: " + rook.getPieceX() + ", " + rook.getPieceY());
+            }
             piece.setPosition(newX, newY);
             updateUIAfterMove(piece, newX, newY, targetPiece);
             resetBoardColors();
@@ -195,7 +209,7 @@ public class ChessBoard extends GridPane {
             for (int col = 0; col < SIZE; col++) {
                 Rectangle square = squares[row][col];
                 square.setEffect(null);
-                square.setFill((row + col) % 2 != 0 ? Color.WHITE : Color.GRAY);
+                square.setFill((row + col) % 2 != 0 ? Color.GRAY : Color.WHITE);
             }
         }
         highlightKingInCheck(true);
