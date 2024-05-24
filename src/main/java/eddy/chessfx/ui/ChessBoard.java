@@ -121,10 +121,12 @@ private void setupSquareClickHandlers() {
         moves = moves.stream()
                 .filter(move -> {
                     Board tempBoard = new Board(chessBoard);  // Create a temporary copy of the board
-                    tempBoard.makeMove(move);  // Make the move on the temporary board
-                    System.out.println("Checking move: " + move.getStartX() + ", " + move.getStartY() + " to " + move.getEndX() + ", " + move.getEndY());
-                    System.out.println("Is king in check? " + tempBoard.isKingInCheck(piece.isWhite()) + "\n");
-                    return !tempBoard.isKingInCheck(piece.isWhite());
+                    if (tempBoard.validateMove(move)) {  // Check if the move is valid
+                        if (tempBoard.makeMove(move)) {
+                            return !tempBoard.isKingInCheck(piece.isWhite());  // Check if the king is still in check
+                        }
+                    }
+                    return false;
                 })
                 .toList();
 
@@ -139,11 +141,9 @@ private void setupSquareClickHandlers() {
         Piece targetPiece = chessBoard.getPiece(newX, newY);
         Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece);
 
-        if (chessBoard.validateMove(proposedMove)) {
-            if (chessBoard.makeMove(proposedMove)){
-                piece.setPosition(newX, newY);
-                updateUIAfterMove(piece, newX, newY, targetPiece);
-            }
+        if (chessBoard.validateMove(proposedMove) && chessBoard.makeMove(proposedMove)) {
+            piece.setPosition(newX, newY);
+            updateUIAfterMove(piece, newX, newY, targetPiece);
         }
     }
 
