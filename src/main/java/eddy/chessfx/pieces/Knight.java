@@ -11,6 +11,7 @@ public class Knight extends Piece {
         super("/images/pieces/knight-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
+    // Dla klasy Knight
     @Override
     public List<Move> getPossibleMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
@@ -20,7 +21,7 @@ public class Knight extends Piece {
             int newX = x + move[0];
             int newY = y + move[1];
             if (board.isMoveWithinBoard(newX, newY) &&
-                    (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite)) {
+                    (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite())) {
                 moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
             }
         }

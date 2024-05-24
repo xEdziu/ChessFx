@@ -11,6 +11,7 @@ public class Queen extends Piece {
         super("/images/pieces/queen-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
+    // Dla klasy Queen
     @Override
     public List<Move> getPossibleMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
@@ -24,7 +25,7 @@ public class Queen extends Piece {
                 newY += dir[1];
                 if (!board.isMoveWithinBoard(newX, newY)) break;
                 if (board.isSquareOccupied(newX, newY)) {
-                    if (board.getPiece(newX, newY).isWhite() != this.isWhite) {
+                    if (board.getPiece(newX, newY).isWhite() != this.isWhite()) {
                         moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
                     }
                     break;

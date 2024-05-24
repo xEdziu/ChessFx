@@ -11,6 +11,7 @@ public class King extends Piece {
         super("/images/pieces/king-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
+    // Dla klasy King
     @Override
     public List<Move> getPossibleMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
@@ -22,12 +23,27 @@ public class King extends Piece {
                     int newX = x + dx;
                     int newY = y + dy;
                     if (board.isMoveWithinBoard(newX, newY) &&
-                            (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite)) {
+                            (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite())) {
                         moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
                     }
                 }
             }
         }
+
+        // Check for castling
+        if (!this.hasMoved()) {
+            //King side
+            if (!board.isSquareOccupied(x + 1, y) && !board.isSquareOccupied(x + 2, y) &&
+                    board.getPiece(x + 3, y) instanceof Rook && !board.getPiece(x + 3, y).hasMoved()) {
+                moves.add(new Move(x, y, x + 2, y, this, board.getPiece(x + 3, y)));
+            }
+            //Queen side
+            if (!board.isSquareOccupied(x - 1, y) && !board.isSquareOccupied(x - 2, y) && !board.isSquareOccupied(x - 3, y) &&
+                    board.getPiece(x - 4, y) instanceof Rook && !board.getPiece(x - 4, y).hasMoved()) {
+                moves.add(new Move(x, y, x - 2, y, this, board.getPiece(x - 4, y)));
+            }
+        }
+
         return moves;
     }
 

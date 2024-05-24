@@ -11,48 +11,44 @@ public class Pawn extends Piece {
         super("/images/pieces/pawn-" + (isWhite ? "w" : "b") + ".svg", isWhite);
     }
 
+    // Dla klasy Pawn
     @Override
     public List<Move> getPossibleMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
-        // White pawns move right, black pawns move left
-        int direction = isWhite() ? 1 : -1;
+        // Pionki białe poruszają się w górę, czarne w dół
+        int direction = isWhite() ? -1 : 1;
 
-        // Move forward by one square if the square is empty
-        if (board.isMoveWithinBoard(x + direction, y) && !board.isSquareOccupied(x+ direction, y )) {
-            moves.add(new Move(x, y, x + direction, y, this, null));
-            // Move forward by two squares if the pawn is on its starting square
-            if ((isWhite() && x == 1) || (!isWhite() && x == 6)) {
-                if (!board.isSquareOccupied(x + 2 * direction, y )) {
-                    moves.add(new Move(x, y, x + 2 * direction, y , this, null));
-                }
+        // Ruch o jedno pole do przodu, jeśli pole jest puste
+        if (board.isMoveWithinBoard(x, y + direction) && !board.isSquareOccupied(x, y + direction)) {
+            moves.add(new Move(x, y, x, y + direction, this, null));
+            // Ruch o dwa pola do przodu, jeśli pionek jest na swoim początkowym polu
+            if (!hasMoved() && !board.isSquareOccupied(x, y + 2 * direction)) {
+                moves.add(new Move(x, y, x, y + 2 * direction, this, null));
             }
         }
 
-        // Attack diagonally
+        // Atak na ukos
         int[] attackDirections = {-1, 1};
         for (int attackDirection : attackDirections) {
-            int attackX = x + direction;
-            int attackY = y + attackDirection;
-            if (board.isMoveWithinBoard(attackX, attackY) && board.isSquareOccupied(attackX, attackY)) {
-                Piece potentialCapture = board.getPiece(attackX, attackY);
-                if (potentialCapture.isWhite() != this.isWhite()) {  // Possible capture
-                    moves.add(new Move(x, y, attackX, attackY, this, potentialCapture));
+            if (board.isMoveWithinBoard(x + attackDirection, y + direction)) {
+                Piece piece = board.getPiece(x + attackDirection, y + direction);
+                if (piece != null && piece.isWhite() != this.isWhite()) {
+                    moves.add(new Move(x, y, x + attackDirection, y + direction, this, piece));
                 }
             }
         }
 
-        // En passant capture
+        // Atak en passant
         Move lastMove = board.getLastMove();
         if (lastMove != null) {
             Piece lastMovedPiece = lastMove.getPieceMoved();
             if (lastMovedPiece instanceof Pawn && Math.abs(lastMove.getStartX() - lastMove.getEndX()) == 2) {
-                if (lastMove.getStartX() == x && (lastMove.getEndY() == y - 1 || lastMove.getEndY() == y + 1) && lastMovedPiece.isWhite() != this.isWhite()) {  // Pawn is on a neighboring file, is of opposite color and is on the same row
-                    //TODO: Fix movement of en passant capture
+                if (lastMove.getStartX() == x && (lastMove.getEndY() == y - 1 || lastMove.getEndY() == y + 1) && lastMovedPiece.isWhite() != this.isWhite()) {  // Pionek jest na sąsiednim polu, jest przeciwnego koloru i jest na tym samym rzędzie
+                    //TODO: Popraw ruch ataku en passant
                     moves.add(new Move(x, y, x + direction, lastMove.getEndY() - direction, this, lastMovedPiece));
                 }
             }
         }
-
         return moves;
     }
 
