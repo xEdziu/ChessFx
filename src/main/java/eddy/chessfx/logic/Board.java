@@ -1,6 +1,6 @@
 package eddy.chessfx.logic;
 
-import eddy.chessfx.pieces.Piece;
+import eddy.chessfx.pieces.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -121,8 +121,9 @@ public class Board {
                 !isMoveWithinBoard(move.getEndX(), move.getEndY())) {
             return false;
         }
-        return board[move.getEndX()][move.getEndY()] == null ||
-                board[move.getEndX()][move.getEndY()].isWhite() != board[move.getStartX()][move.getStartY()].isWhite();
+        Piece startPiece = board[move.getStartX()][move.getStartY()];
+        Piece endPiece = board[move.getEndX()][move.getEndY()];
+        return startPiece != null && (endPiece == null || endPiece.isWhite() != startPiece.isWhite());
     }
 
     public boolean isMoveWithinBoard(int x, int y) {
@@ -218,5 +219,124 @@ public class Board {
             }
         }
         return true;
+    }
+
+    public String getGameInChessNotation() {
+        StringBuilder notation = new StringBuilder();
+        int moveCount = 1;
+        for (int i = 0; i < moveHistory.size(); i += 2) {
+            notation.append(moveCount).append(". ");
+            Move whiteMove = moveHistory.get(i);
+            notation.append(getMoveNotation(whiteMove));
+            if (isCheckAfterMove(whiteMove)) {
+                notation.append(isCheckmateAfterMove(whiteMove) ? "#" : "+");
+            }
+            notation.append(" ");
+            if (i + 1 < moveHistory.size()) {
+                Move blackMove = moveHistory.get(i + 1);
+                notation.append(getMoveNotation(blackMove));
+                if (isCheckAfterMove(blackMove)) {
+                    notation.append(isCheckmateAfterMove(blackMove) ? "#" : "+");
+                }
+                notation.append(" ");
+            }
+            notation.append("\n");
+            moveCount++;
+        }
+
+        // Add the game result
+        if (isCheckmate(true)) {
+            notation.append("0-1"); // Black wins
+        } else if (isCheckmate(false)) {
+            notation.append("1-0"); // White wins
+        } else {
+            notation.append("0.5-0.5"); // Draw
+        }
+
+        return notation.toString();
+    }
+
+    private boolean isCheckAfterMove(Move move) {
+        Board tempBoard = new Board();
+        for (int i = 0; i < moveHistory.indexOf(move); i++) {
+            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured()));
+        }
+        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured()));
+        return tempBoard.isKingInCheck(!move.getPieceMoved().isWhite());
+    }
+
+    private boolean isCheckmateAfterMove(Move move) {
+        Board tempBoard = new Board();
+        for (int i = 0; i < moveHistory.indexOf(move); i++) {
+            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured()));
+        }
+        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured()));
+        return tempBoard.isCheckmate(!move.getPieceMoved().isWhite());
+    }
+
+    private String getMoveNotation(Move move) {
+        Piece pieceMoved = move.getPieceMoved();
+        String pieceNotation = getPieceNotation(pieceMoved);
+        String captureNotation = move.getPieceCaptured() != null ? "x" : "";
+        String destination = getSquareNotation(move.getEndX(), move.getEndY());
+
+        // Check for ambiguity
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece piece = getPiece(x, y);
+                if (piece != null && piece.getClass().equals(pieceMoved.getClass()) && piece.isWhite() == pieceMoved.isWhite() && !(x == move.getStartX() && y == move.getStartY())) {
+                    List<Move> moves = piece.getPossibleMoves(this, x, y);
+                    for (Move possibleMove : moves) {
+                        if (possibleMove.getEndX() == move.getEndX() && possibleMove.getEndY() == move.getEndY()) {
+                            // If the pieces are in the same row
+                            if (move.getStartX() == x) {
+                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
+                            }
+                            // If the pieces are in the same column
+                            else if (move.getStartY() == y) {
+                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(1);
+                            }
+                            // If the pieces are in different rows and columns
+                            else {
+                                pieceNotation += getSquareNotation(move.getStartX(), move.getStartY()).charAt(0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return pieceNotation + captureNotation + destination;
+    }
+
+    private String getPieceNotation(Piece piece) {
+        return switch (piece) {
+            case King ignored -> "K";
+            case Queen ignored2 -> "Q";
+            case Rook ignored3 -> "R";
+            case Bishop ignored4 -> "B";
+            case Knight  ignored5 -> "N";
+            case null, default -> "";
+        };
+    }
+
+    private String getSquareNotation(int x, int y) {
+        return (char) ('a' + y) + Integer.toString(8 - x);
+    }
+
+    public void restartGame() {
+        clearPiecesFromBoard();
+        moveHistory.clear();
+        setupInitialBoard();
+        setWhiteTurn(true);
+        lastMove = null;
+    }
+
+    private void clearPiecesFromBoard(){
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                board[x][y] = null;
+            }
+        }
     }
 }

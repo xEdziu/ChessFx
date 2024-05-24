@@ -4,12 +4,22 @@ import eddy.chessfx.logic.Board;
 import eddy.chessfx.logic.Move;
 import eddy.chessfx.pieces.*;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+
+import java.io.File;
 import java.util.List;
+import javafx.stage.FileChooser;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ChessBoard extends GridPane {
     private static final int SIZE = 8;
@@ -32,6 +42,7 @@ public class ChessBoard extends GridPane {
                 StackPane cell = new StackPane();
                 Rectangle square = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
                 square.setFill((row + col) % 2 == 0 ? Color.GRAY : Color.WHITE);
+                square.setStroke(Color.rgb(0, 0, 0, 0.5));
                 squares[row][col] = square;
                 cell.getChildren().add(square);
                 this.add(cell, col, row);
@@ -62,13 +73,14 @@ public class ChessBoard extends GridPane {
                 highlightPossibleMoves(piece);
                 selectedPiece = piece;
                 System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
+                squares[piece.getPieceY()][piece.getPieceX()].setEffect(glow);
+                squares[piece.getPieceY()][piece.getPieceX()].setFill(Color.rgb(128, 0, 128, 0.10));
             } else if (selectedPiece != null) {
                 Move proposedMove = new Move(selectedPiece.getPieceX(), selectedPiece.getPieceY(), piece.getPieceX(), piece.getPieceY(), selectedPiece, piece);
                 List<Move> possibleMoves = selectedPiece.getPossibleMoves(chessBoard, selectedPiece.getPieceX(), selectedPiece.getPieceY());
                 if (possibleMoves.contains(proposedMove)) {
                     System.out.println("Piece captured: " + piece.getClass().getSimpleName());
                     movePiece(selectedPiece, piece.getPieceX(), piece.getPieceY());
-                    resetBoardColors();
                     selectedPiece = null;
                 }
             }
@@ -76,44 +88,43 @@ public class ChessBoard extends GridPane {
         });
     }
 
-private void setupSquareClickHandlers() {
-    for (int row = 0; row < SIZE; row++) {
-        for (int col = 0; col < SIZE; col++) {
-            Rectangle square = squares[row][col];
-            int finalCol = col;
-            int finalRow = row;
-            square.setOnMouseClicked(event -> {
-                System.out.println("Square clicked: " + finalCol + ", " + finalRow); // Log the clicked square
-                Piece piece = chessBoard.getPiece(finalCol, finalRow);
-                if (selectedPiece != null) {
-                    if (piece == selectedPiece) {
+    private void setupSquareClickHandlers() {
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                Rectangle square = squares[row][col];
+                int finalCol = col;
+                int finalRow = row;
+                square.setOnMouseClicked(event -> {
+                    System.out.println("Square clicked: " + finalCol + ", " + finalRow); // Log the clicked square
+                    Piece piece = chessBoard.getPiece(finalCol, finalRow);
+                    if (selectedPiece != null) {
+                        if (piece == selectedPiece) {
+                            System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
+                            System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
+                            resetBoardColors();
+                            highlightPossibleMoves(piece);
+                            selectedPiece = piece;
+                            System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
+                        } else if (square.getEffect() != null) {
+                            if (chessBoard.isSquareOccupied(finalCol, finalRow)) {
+                                System.out.println("Piece captured: " + chessBoard.getPiece(finalCol, finalRow).getClass().getSimpleName());
+                            }
+                            movePiece(selectedPiece, finalCol, finalRow);
+                            selectedPiece = null;
+                        }
+                    } else if (piece != null && piece.isWhite() == chessBoard.isWhiteTurn()) {
                         System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
                         System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
                         resetBoardColors();
                         highlightPossibleMoves(piece);
                         selectedPiece = piece;
                         System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
-                    } else if (square.getEffect() != null) {
-                        if (chessBoard.isSquareOccupied(finalCol, finalRow)) {
-                            System.out.println("Piece captured: " + chessBoard.getPiece(finalCol, finalRow).getClass().getSimpleName());
-                        }
-                        movePiece(selectedPiece, finalCol, finalRow);
-                        resetBoardColors();
-                        selectedPiece = null;
                     }
-                } else if (piece != null && piece.isWhite() == chessBoard.isWhiteTurn()) {
-                    System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
-                    System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
-                    resetBoardColors();
-                    highlightPossibleMoves(piece);
-                    selectedPiece = piece;
-                    System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
-                }
-                event.consume();
-            });
+                    event.consume();
+                });
+            }
         }
     }
-}
 
     public void highlightPossibleMoves(Piece piece) {
         List<Move> moves = piece.getPossibleMoves(chessBoard, piece.getPieceX(), piece.getPieceY());
@@ -133,7 +144,7 @@ private void setupSquareClickHandlers() {
         for (Move move : moves) {
             Rectangle targetSquare = squares[move.getEndY()][move.getEndX()];
             targetSquare.setEffect(glow);
-            targetSquare.setFill(chessBoard.isSquareOccupied(move.getEndX(), move.getEndY()) ? Color.rgb(255, 0, 0, 0.15) : Color.rgb(0, 255, 0, 0.15));
+            targetSquare.setFill(chessBoard.isSquareOccupied(move.getEndX(), move.getEndY()) ? Color.rgb(255, 0, 0, 0.10) : Color.rgb(0, 255, 0, 0.10));
         }
     }
 
@@ -144,6 +155,8 @@ private void setupSquareClickHandlers() {
         if (chessBoard.validateMove(proposedMove) && chessBoard.makeMove(proposedMove)) {
             piece.setPosition(newX, newY);
             updateUIAfterMove(piece, newX, newY, targetPiece);
+            resetBoardColors();
+            checkForCheckmate();
         }
     }
 
@@ -152,10 +165,20 @@ private void setupSquareClickHandlers() {
             for (int y = 0; y < 8; y++) {
                 Piece piece = chessBoard.getPiece(x, y);
                 if (piece instanceof King && piece.isWhite() == isWhite && chessBoard.isKingInCheck(isWhite)) {
-                    squares[y][x].setFill(Color.rgb(255, 255, 0, 0.15)); // Yellow highlight
+                    squares[y][x].setFill(Color.rgb(255, 255, 0, 0.2)); // Yellow highlight
                     squares[y][x].setEffect(glow);
                 }
             }
+        }
+    }
+
+    private void checkForCheckmate(){
+        boolean isWhiteTurn = chessBoard.isWhiteTurn();
+        if (chessBoard.isCheckmate(isWhiteTurn)) {
+            System.out.println("Checkmate!");
+            System.out.println(isWhiteTurn ? "Black wins!" : "White wins!");
+            String winner = isWhiteTurn ? "Black" : "White";
+            showEndGamePopup(winner);
         }
     }
 
@@ -186,5 +209,56 @@ private void setupSquareClickHandlers() {
             }
         }
         return null; // if not found
+    }
+
+    private void downloadGame(String winner) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Game");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+        String userDirectoryString = System.getProperty("user.home") + "/Downloads";
+        File userDirectory = new File(userDirectoryString);
+        if (!userDirectory.exists()) {
+            userDirectory.mkdirs();
+        }
+        fileChooser.setInitialDirectory(userDirectory);
+        String defaultFileName = "ChessGame_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm")) + ".txt";
+        fileChooser.setInitialFileName(defaultFileName);
+
+        File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                writer.write(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy | HH:mm")) + " | Winner: " + winner + "\n");
+                writer.write(chessBoard.getGameInChessNotation());
+            } catch (IOException e) {
+                System.out.println("Error saving game: " + e.getMessage());
+            }
+        }
+    }
+
+    private void showEndGamePopup(String winner) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText("Checkmate!");
+        alert.setContentText(winner + " wins!");
+
+        ButtonType newGameButton = new ButtonType("New Game");
+        ButtonType exitButton = new ButtonType("Exit");
+        ButtonType downloadGameButton = new ButtonType("Download Game");
+
+        alert.getButtonTypes().setAll(newGameButton, exitButton, downloadGameButton);
+
+        alert.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == newGameButton) {
+                chessBoard.restartGame();
+                this.getChildren().clear();
+                drawBoard();
+                placePieces();
+                setupSquareClickHandlers();
+            } else if (buttonType == exitButton) {
+                System.exit(0);
+            } else if (buttonType == downloadGameButton) {
+                downloadGame(winner);
+            }
+        });
     }
 }
