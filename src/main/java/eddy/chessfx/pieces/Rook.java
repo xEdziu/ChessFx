@@ -34,4 +34,12 @@ public class Rook extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public Rook copy(){
+        Rook copy = new Rook(this.isWhite);
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        copy.setHasMoved(this.hasMoved());
+        return copy;
+    }
 }

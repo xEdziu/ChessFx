@@ -34,4 +34,12 @@ public class Bishop extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public  Bishop copy(){
+        Bishop copy = new Bishop(this.isWhite());
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        copy.setHasMoved(this.hasMoved());
+        return copy;
+    }
 }

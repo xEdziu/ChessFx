@@ -2,7 +2,7 @@ package eddy.chessfx.ui;
 
 import eddy.chessfx.logic.Board;
 import eddy.chessfx.logic.Move;
-import eddy.chessfx.pieces.Piece;
+import eddy.chessfx.pieces.*;
 import javafx.scene.Node;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.GridPane;
@@ -52,7 +52,6 @@ public class ChessBoard extends GridPane {
             }
         }
     }
-
 
     private void setupClickHandlers(Piece piece) {
         piece.setOnMouseClicked(event -> {
@@ -116,61 +115,19 @@ private void setupSquareClickHandlers() {
     }
 }
 
-//private void setupClickHandlers(Piece piece) {
-//    piece.setOnMouseClicked(event -> {
-//        if (piece.isWhite() == chessBoard.isWhiteTurn()) {
-//            System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
-//            System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
-//            resetBoardColors();
-//            highlightPossibleMoves(piece);
-//            selectedPiece = piece;
-//            System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
-////            event.consume();
-//        } else if (selectedPiece != null) {
-//            Move proposedMove = new Move(selectedPiece.getPieceX(), selectedPiece.getPieceY(), piece.getPieceX(), piece.getPieceY(), selectedPiece, piece);
-//            List<Move> possibleMoves = selectedPiece.getPossibleMoves(chessBoard, selectedPiece.getPieceX(), selectedPiece.getPieceY());
-//            System.out.println("Proposed move: " + proposedMove);
-//            System.out.println("Possible moves: " + possibleMoves);
-//            if (possibleMoves.contains(proposedMove)) {
-//                System.out.println("Piece captured: " + piece.getClass().getSimpleName());
-//                movePiece(selectedPiece, piece.getPieceX(), piece.getPieceY());
-//                resetBoardColors();
-//                selectedPiece = null;
-//                System.out.println("Selected piece reset to null after capturing");
-//            } else {
-//                System.out.println("Proposed move not in possible moves");
-//            }
-////            event.consume();
-//        } else {
-//            System.out.println("No piece selected yet");
-//        }
-//    });
-//}
-//
-//private void setupSquareClickHandlers() {
-//    for (int row = 0; row < SIZE; row++) {
-//        for (int col = 0; col < SIZE; col++) {
-//            Rectangle square = squares[row][col];
-//            int finalCol = col;
-//            int finalRow = row;
-//            square.setOnMouseClicked(event -> {
-//                System.out.println("Square clicked: " + finalCol + ", " + finalRow); // Log the clicked square
-//                if (selectedPiece != null && square.getEffect() != null) {
-//                    if (chessBoard.isSquareOccupied(finalCol, finalRow)) {
-//                        System.out.println("Piece captured: " + chessBoard.getPiece(finalCol, finalRow).getClass().getSimpleName());
-//                    }
-//                    movePiece(selectedPiece, finalCol, finalRow);
-//                    resetBoardColors();
-//                    selectedPiece = null;
-//                }
-//                event.consume();
-//            });
-//        }
-//    }
-//}
-
     public void highlightPossibleMoves(Piece piece) {
         List<Move> moves = piece.getPossibleMoves(chessBoard, piece.getPieceX(), piece.getPieceY());
+
+        moves = moves.stream()
+                .filter(move -> {
+                    Board tempBoard = new Board(chessBoard);  // Create a temporary copy of the board
+                    tempBoard.makeMove(move);  // Make the move on the temporary board
+                    System.out.println("Checking move: " + move.getStartX() + ", " + move.getStartY() + " to " + move.getEndX() + ", " + move.getEndY());
+                    System.out.println("Is king in check? " + tempBoard.isKingInCheck(piece.isWhite()) + "\n");
+                    return !tempBoard.isKingInCheck(piece.isWhite());
+                })
+                .toList();
+
         for (Move move : moves) {
             Rectangle targetSquare = squares[move.getEndY()][move.getEndX()];
             targetSquare.setEffect(glow);
@@ -178,16 +135,29 @@ private void setupSquareClickHandlers() {
         }
     }
 
-private void movePiece(Piece piece, int newX, int newY) {
-    Piece targetPiece = chessBoard.getPiece(newX, newY);
-    Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece);
+    private void movePiece(Piece piece, int newX, int newY) {
+        Piece targetPiece = chessBoard.getPiece(newX, newY);
+        Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece);
 
-    if (chessBoard.validateMove(proposedMove)) {
-        chessBoard.makeMove(proposedMove);
-        piece.setPosition(newX, newY);
-        updateUIAfterMove(piece, newX, newY, targetPiece);
+        if (chessBoard.validateMove(proposedMove)) {
+            if (chessBoard.makeMove(proposedMove)){
+                piece.setPosition(newX, newY);
+                updateUIAfterMove(piece, newX, newY, targetPiece);
+            }
+        }
     }
-}
+
+    public void highlightKingInCheck(boolean isWhite) {
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece piece = chessBoard.getPiece(x, y);
+                if (piece instanceof King && piece.isWhite() == isWhite && chessBoard.isKingInCheck(isWhite)) {
+                    squares[y][x].setFill(Color.rgb(255, 255, 0, 0.15)); // Yellow highlight
+                    squares[y][x].setEffect(glow);
+                }
+            }
+        }
+    }
 
     private void updateUIAfterMove(Piece piece, int newX, int newY, Piece targetPiece) {
         StackPane targetCell = getNodeByRowColumnIndex(newY, newX);
@@ -205,6 +175,8 @@ private void movePiece(Piece piece, int newX, int newY) {
                 square.setFill((row + col) % 2 != 0 ? Color.WHITE : Color.GRAY);
             }
         }
+        highlightKingInCheck(true);
+        highlightKingInCheck(false);
     }
 
     private StackPane getNodeByRowColumnIndex(int row, int column) {

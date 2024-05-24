@@ -68,4 +68,6 @@ public abstract class Piece extends ImageView {
 
     // Abstract method to get all possible moves for this piece
     public abstract List<Move> getPossibleMoves(Board board, int x, int y);
+
+    public abstract Piece copy();
 }

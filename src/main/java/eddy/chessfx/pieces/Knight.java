@@ -26,4 +26,12 @@ public class Knight extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public Knight copy(){
+        Knight copy = new Knight(this.isWhite());
+        copy.setHasMoved(this.hasMoved());
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        return copy;
+    }
 }

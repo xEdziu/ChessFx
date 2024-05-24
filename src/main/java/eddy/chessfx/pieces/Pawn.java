@@ -41,18 +41,26 @@ public class Pawn extends Piece {
             }
         }
 
-    // En passant capture
-    Move lastMove = board.getLastMove();
-    if (lastMove != null) {
-        Piece lastMovedPiece = lastMove.getPieceMoved();
-        if (lastMovedPiece instanceof Pawn && Math.abs(lastMove.getStartX() - lastMove.getEndX()) == 2) {
-            if (lastMove.getStartX() == x && (lastMove.getEndY() == y - 1 || lastMove.getEndY() == y + 1) && lastMovedPiece.isWhite() != this.isWhite()) {  // Pawn is on a neighboring file, is of opposite color and is on the same row
-                //TODO: Fix movement of en passant capture
-                moves.add(new Move(x, y, x + direction, lastMove.getEndY() - direction, this, lastMovedPiece));
+        // En passant capture
+        Move lastMove = board.getLastMove();
+        if (lastMove != null) {
+            Piece lastMovedPiece = lastMove.getPieceMoved();
+            if (lastMovedPiece instanceof Pawn && Math.abs(lastMove.getStartX() - lastMove.getEndX()) == 2) {
+                if (lastMove.getStartX() == x && (lastMove.getEndY() == y - 1 || lastMove.getEndY() == y + 1) && lastMovedPiece.isWhite() != this.isWhite()) {  // Pawn is on a neighboring file, is of opposite color and is on the same row
+                    //TODO: Fix movement of en passant capture
+                    moves.add(new Move(x, y, x + direction, lastMove.getEndY() - direction, this, lastMovedPiece));
+                }
             }
         }
-    }
 
         return moves;
+    }
+
+    @Override
+     public Pawn copy() {
+        Pawn copy = new Pawn(this.isWhite());
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        copy.setHasMoved(this.hasMoved());
+        return copy;
     }
 }

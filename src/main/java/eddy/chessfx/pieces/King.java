@@ -30,4 +30,12 @@ public class King extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public King copy(){
+        King copy = new King(isWhite());
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        copy.setHasMoved(this.hasMoved());
+        return copy;
+    }
 }

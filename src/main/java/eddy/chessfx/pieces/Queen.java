@@ -34,4 +34,12 @@ public class Queen extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public Queen copy() {
+        Queen copy = new Queen(this.isWhite);
+        copy.setPosition(this.getPieceX(), this.getPieceY());
+        copy.setHasMoved(this.hasMoved());
+        return copy;
+    }
 }

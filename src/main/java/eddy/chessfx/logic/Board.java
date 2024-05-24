@@ -17,6 +17,22 @@ public class Board {
         setWhiteTurn(true);
     }
 
+    public Board(Board board) {
+        this.board = new Piece[8][8];
+        this.moveHistory = new ArrayList<>(board.moveHistory);
+        this.whiteTurn = board.whiteTurn;
+        this.lastMove = board.lastMove == null ? null  : new Move(board.lastMove.getStartX(), board.lastMove.getStartY(), board.lastMove.getEndX(), board.lastMove.getEndY(), board.lastMove.getPieceMoved(), board.lastMove.getPieceCaptured());
+
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece piece = board.getPiece(x, y);
+                if (piece != null) {
+                    this.board[x][y] = piece.copy();
+                }
+            }
+        }
+    }
+
     public boolean isWhiteTurn() {
         return whiteTurn;
     }
@@ -78,9 +94,17 @@ public class Board {
     public boolean makeMove(Move move) {
         if (validateMove(move)) {
             Piece piece = board[move.getStartX()][move.getStartY()];
+            Piece targetPiece = board[move.getEndX()][move.getEndY()];
             board[move.getEndX()][move.getEndY()] = piece;
             board[move.getStartX()][move.getStartY()] = null;
             moveHistory.add(move);
+            if (isKingInCheck(piece.isWhite())) {
+                // Undo the move if it leaves the king in check
+                board[move.getStartX()][move.getStartY()] = piece;
+                board[move.getEndX()][move.getEndY()] = targetPiece;
+                moveHistory.remove(move);
+                return false;
+            }
             piece.setHasMoved(true);
             lastMove = move;
             setWhiteTurn(!isWhiteTurn());
