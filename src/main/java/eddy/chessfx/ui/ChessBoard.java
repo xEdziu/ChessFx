@@ -144,8 +144,25 @@ public class ChessBoard extends GridPane {
         for (Move move : moves) {
             Rectangle targetSquare = squares[move.getEndY()][move.getEndX()];
             targetSquare.setEffect(glow);
+            if (piece instanceof Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1) {
+                targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
+            } else if (piece instanceof Pawn &&
+                    (move.getEndY() == 0 || move.getEndY() == 7)) {
+                targetSquare.setFill(Color.rgb(0, 0, 255, 0.10));  // Blue highlight
+            } else if (piece instanceof King && move.isCastlingMove()) {
+                targetSquare.setFill(Color.rgb(0, 255, 255, 0.10));  // Cyan highlight
+            } else if (piece instanceof King && Math.abs(move.getEndX() - piece.getPieceX()) == 2) {
+                targetSquare.setFill(Color.rgb(255, 255, 0, 0.10));  // Yellow highlight
+            } else if (chessBoard.isSquareOccupied(move.getEndX(), move.getEndY())) {
+                targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
+            } else {
+                targetSquare.setFill(Color.rgb(0, 255, 0, 0.10));  // Green highlight
+            }
             targetSquare.setFill(chessBoard.isSquareOccupied(move.getEndX(), move.getEndY()) ? Color.rgb(255, 0, 0, 0.10) : Color.rgb(0, 255, 0, 0.10));
+            if (piece instanceof Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1 && Math.abs(move.getStartY() - move.getEndY()) == 1 && !chessBoard.isSquareOccupied(move.getEndX(), move.getEndY() - 1))
+                targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
         }
+
     }
 
     private void movePiece(Piece piece, int newX, int newY) {
@@ -167,12 +184,28 @@ public class ChessBoard extends GridPane {
                 System.out.println("Castling move!");
                 System.out.println("Rook pos from object: " + rook.getPieceX() + ", " + rook.getPieceY());
             }
+
+            if (piece instanceof Pawn && Math.abs(newX - piece.getPieceX()) == 1 ) {
+                System.out.println("En passant move!");
+                int capturedPawnY = !piece.isWhite() ? newY - 1 : newY + 1;  // Y position of the captured pawn
+                Piece capturedPawn = chessBoard.getPiece(newX, capturedPawnY);
+                System.out.println("Captured pawn position: " + newX + ", " + capturedPawnY);
+                if (capturedPawn != null) {
+                    // Remove the captured pawn from the UI
+                    System.out.println("Removing captured pawn from the UI");
+                    StackPane capturedPawnCell = getNodeByRowColumnIndex(capturedPawnY, newX);
+                    capturedPawnCell.getChildren().remove(capturedPawn);
+                    chessBoard.removePiece(newX, capturedPawnY);
+                }
+            }
+        }
+
+
             piece.setPosition(newX, newY);
             updateUIAfterMove(piece, newX, newY, targetPiece);
             resetBoardColors();
             checkForCheckmate();
         }
-    }
 
     public void highlightKingInCheck(boolean isWhite) {
         for (int x = 0; x < 8; x++) {

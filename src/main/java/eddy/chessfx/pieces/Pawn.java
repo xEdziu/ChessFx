@@ -41,14 +41,18 @@ public class Pawn extends Piece {
         // Atak en passant
         Move lastMove = board.getLastMove();
         if (lastMove != null) {
-            Piece lastMovedPiece = lastMove.getPieceMoved();
-            if (lastMovedPiece instanceof Pawn && Math.abs(lastMove.getStartX() - lastMove.getEndX()) == 2) {
-                if (lastMove.getStartX() == x && (lastMove.getEndY() == y - 1 || lastMove.getEndY() == y + 1) && lastMovedPiece.isWhite() != this.isWhite()) {  // Pionek jest na sąsiednim polu, jest przeciwnego koloru i jest na tym samym rzędzie
-                    //TODO: Popraw ruch ataku en passant
-                    moves.add(new Move(x, y, x + direction, lastMove.getEndY() - direction, this, lastMovedPiece));
+            // Sprawdź, czy ostatni ruch był wykonany przez pionka przeciwnika, który przesunął się o dwa pola
+            if (Math.abs(lastMove.getStartY() - lastMove.getEndY()) == 2 && lastMove.getPieceMoved() instanceof Pawn) {
+                // Sprawdź, czy pionek jest na odpowiednim polu do wykonania bicia w przelocie
+                if (y == (isWhite() ? 3 : 4)) {
+                    // Sprawdź, czy pionek jest na polu bezpośrednio obok pionka, który wykonał ostatni ruch
+                    if (x - lastMove.getEndX() == 1 || x - lastMove.getEndX() == -1) {
+                        moves.add(new Move(x, y, lastMove.getEndX(), y + direction, this, lastMove.getPieceMoved()));
+                    }
                 }
             }
         }
+
         return moves;
     }
 

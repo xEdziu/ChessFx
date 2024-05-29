@@ -114,9 +114,7 @@ public class Board {
             piece.setHasMoved(true);
             lastMove = move;
             setWhiteTurn(!isWhiteTurn());
-            if (piece instanceof eddy.chessfx.pieces.Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1 && !isSquareOccupied(move.getEndX(), move.getEndY())){  // En passant capture
-                board[move.getStartX()][move.getEndY()] = null; // Remove the captured pawn
-            }
+
             return true;
         }
         return false;
@@ -318,6 +316,10 @@ public boolean isCheckmate(boolean isWhite) {
         setupInitialBoard();
         setWhiteTurn(true);
         lastMove = null;
+    }
+
+    public void removePiece(int x, int y) {
+        board[x][y] = null;
     }
 
     private void clearPiecesFromBoard(){
