@@ -6,13 +6,16 @@ import eddy.chessfx.pieces.*;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.awt.*;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import javafx.stage.FileChooser;
 import java.io.BufferedWriter;
@@ -20,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 public class ChessBoard extends GridPane {
     private static final int SIZE = 8;
@@ -76,7 +80,7 @@ public class ChessBoard extends GridPane {
                 squares[piece.getPieceY()][piece.getPieceX()].setEffect(glow);
                 squares[piece.getPieceY()][piece.getPieceX()].setFill(Color.rgb(128, 0, 128, 0.10));
             } else if (selectedPiece != null) {
-                Move proposedMove = new Move(selectedPiece.getPieceX(), selectedPiece.getPieceY(), piece.getPieceX(), piece.getPieceY(), selectedPiece, piece);
+                Move proposedMove = new Move(selectedPiece.getPieceX(), selectedPiece.getPieceY(), piece.getPieceX(), piece.getPieceY(), selectedPiece, piece, null);
                 List<Move> possibleMoves = selectedPiece.getPossibleMoves(chessBoard, selectedPiece.getPieceX(), selectedPiece.getPieceY());
                 if (possibleMoves.contains(proposedMove)) {
                     System.out.println("Piece captured: " + piece.getClass().getSimpleName());
@@ -158,16 +162,20 @@ public class ChessBoard extends GridPane {
             } else {
                 targetSquare.setFill(Color.rgb(0, 255, 0, 0.10));  // Green highlight
             }
-            targetSquare.setFill(chessBoard.isSquareOccupied(move.getEndX(), move.getEndY()) ? Color.rgb(255, 0, 0, 0.10) : Color.rgb(0, 255, 0, 0.10));
-            if (piece instanceof Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1 && Math.abs(move.getStartY() - move.getEndY()) == 1 && !chessBoard.isSquareOccupied(move.getEndX(), move.getEndY() - 1))
-                targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
+            if (piece instanceof Pawn && Math.abs(move.getStartX() - move.getEndX()) == 1 && Math.abs(move.getStartY() - move.getEndY()) == 1) {
+                if (move.getEndY() > 0 && !chessBoard.isSquareOccupied(move.getEndX(), move.getEndY() - 1)) {
+                    targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
+                } else if (move.getEndY() < 7 && !chessBoard.isSquareOccupied(move.getEndX(), move.getEndY() + 1)) {
+                    targetSquare.setFill(Color.rgb(255, 0, 0, 0.10));  // Red highlight
+                }
+            }
         }
 
     }
 
     private void movePiece(Piece piece, int newX, int newY) {
         Piece targetPiece = chessBoard.getPiece(newX, newY);
-        Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece);
+        Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece, null);
 
         System.out.println("Move: " + piece.getClass().getSimpleName() + " from " + piece.getPieceX() + ", " + piece.getPieceY() + " to " + newX + ", " + newY);
         System.out.println("Where actual X and Y are: " + piece.getPieceX() + ", " + piece.getPieceY() + " and new are " + newX + ", " + newY);
@@ -203,9 +211,44 @@ public class ChessBoard extends GridPane {
 
             piece.setPosition(newX, newY);
             updateUIAfterMove(piece, newX, newY, targetPiece);
+
+            if (piece instanceof Pawn && (newY == 0 || newY == 7)) {
+                System.out.println("Pawn promotion!");
+                String pieceType = showPromotionDialog();
+                chessBoard.removePiece(newX, newY);
+                StackPane cell = getNodeByRowColumnIndex(newY, newX);
+                cell.getChildren().remove(piece);
+                Piece newPiece = createNewPiece(pieceType, piece.isWhite());
+                chessBoard.placePiece(newPiece, newX, newY);
+                updateUIAfterMove(newPiece, newX, newY, null);
+                proposedMove.setPromotionPiece(newPiece);
+            }
+
             resetBoardColors();
             checkForCheckmate();
-        }
+    }
+
+    private String showPromotionDialog() {
+        List<String> choices = Arrays.asList("Queen", "Rook", "Knight", "Bishop");
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Queen", choices);
+        dialog.setTitle("Pawn Promotion");
+        dialog.setHeaderText("Choose a piece to promote your pawn to:");
+        dialog.setContentText("Choose your piece:");
+
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse("Queen");
+    }
+
+    private Piece createNewPiece(String pieceType, boolean isWhite) {
+        return switch (pieceType) {
+            case "Rook" -> new Rook(isWhite);
+            case "Knight" -> new Knight(isWhite);
+            case "Bishop" -> new Bishop(isWhite);
+            case "Queen" -> new Queen(isWhite);
+            default -> null;
+        };
+    }
 
     public void highlightKingInCheck(boolean isWhite) {
         for (int x = 0; x < 8; x++) {

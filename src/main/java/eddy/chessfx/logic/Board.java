@@ -21,7 +21,7 @@ public class Board {
         this.board = new Piece[8][8];
         this.moveHistory = new ArrayList<>(board.moveHistory);
         this.whiteTurn = board.whiteTurn;
-        this.lastMove = board.lastMove == null ? null  : new Move(board.lastMove.getStartX(), board.lastMove.getStartY(), board.lastMove.getEndX(), board.lastMove.getEndY(), board.lastMove.getPieceMoved(), board.lastMove.getPieceCaptured());
+        this.lastMove = board.lastMove == null ? null  : new Move(board.lastMove.getStartX(), board.lastMove.getStartY(), board.lastMove.getEndX(), board.lastMove.getEndY(), board.lastMove.getPieceMoved(), board.lastMove.getPieceCaptured(), null);
 
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
@@ -239,18 +239,18 @@ public boolean isCheckmate(boolean isWhite) {
     private boolean isCheckAfterMove(Move move) {
         Board tempBoard = new Board();
         for (int i = 0; i < moveHistory.indexOf(move); i++) {
-            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured()));
+            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured(), null));
         }
-        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured()));
+        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured(), null));
         return tempBoard.isKingInCheck(!move.getPieceMoved().isWhite());
     }
 
     private boolean isCheckmateAfterMove(Move move) {
         Board tempBoard = new Board();
         for (int i = 0; i < moveHistory.indexOf(move); i++) {
-            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured()));
+            tempBoard.makeMove(new Move(moveHistory.get(i).getStartX(), moveHistory.get(i).getStartY(), moveHistory.get(i).getEndX(), moveHistory.get(i).getEndY(), moveHistory.get(i).getPieceMoved(), moveHistory.get(i).getPieceCaptured(), null));
         }
-        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured()));
+        tempBoard.makeMove(new Move(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY(), move.getPieceMoved(), move.getPieceCaptured(), null));
         return tempBoard.isCheckmate(!move.getPieceMoved().isWhite());
     }
 
@@ -263,6 +263,22 @@ public boolean isCheckmate(boolean isWhite) {
         // Check for castling
         if (pieceMoved instanceof King && Math.abs(move.getStartX() - move.getEndX()) == 2) {
             return move.getEndX() > move.getStartX() ? "O-O" : "O-O-O";
+        }
+
+        // Check for pawn promotion
+        if (pieceMoved instanceof Pawn && (move.getEndY() == 0 || move.getEndY() == 7)) {
+            String promotionPiece = "";  // Add this line
+            // Add the following lines
+            if (move.getPromotionPiece() instanceof Queen) {
+                promotionPiece = "Q";
+            } else if (move.getPromotionPiece() instanceof Rook) {
+                promotionPiece = "R";
+            } else if (move.getPromotionPiece() instanceof Bishop) {
+                promotionPiece = "B";
+            } else if (move.getPromotionPiece() instanceof Knight) {
+                promotionPiece = "N";
+            }
+            return pieceNotation + captureNotation + destination + "=" + promotionPiece;  // Modify this line
         }
 
         // Check for ambiguity
@@ -316,6 +332,11 @@ public boolean isCheckmate(boolean isWhite) {
         setupInitialBoard();
         setWhiteTurn(true);
         lastMove = null;
+    }
+
+    public void placePiece(Piece piece, int x, int y) {
+        board[x][y] = piece;
+        piece.setPosition(x, y);
     }
 
     public void removePiece(int x, int y) {
