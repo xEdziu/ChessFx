@@ -22,7 +22,7 @@ public class Knight extends Piece {
             int newY = y + move[1];
             if (board.isMoveWithinBoard(newX, newY) &&
                     (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite())) {
-                moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
+                moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY), null));
             }
         }
         return moves;

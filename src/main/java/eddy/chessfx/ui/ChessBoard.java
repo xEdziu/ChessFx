@@ -13,7 +13,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.awt.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -32,12 +31,26 @@ public class ChessBoard extends GridPane {
     private final Rectangle[][] squares = new Rectangle[SIZE][SIZE];
     private final Glow glow = new Glow(0.5);
     private Piece selectedPiece = null;  // Add this line
+    private boolean isPlayerWhite;
+    private boolean isPlayerVsPlayer;
+    private boolean isCheckmate = false;
+    private boolean isPlayerMove = true;
+    public String winnerString = "";
 
-    public ChessBoard(Board chessBoard) {
+    public ChessBoard(Board chessBoard, boolean isPlayerWhite, boolean isPlayerVsPlayer) {
         this.chessBoard = chessBoard;
         drawBoard();
         placePieces();
         setupSquareClickHandlers();  // Add this line
+        this.isPlayerWhite = isPlayerWhite;
+        this.isPlayerVsPlayer = isPlayerVsPlayer;
+        if (!isPlayerVsPlayer && !isPlayerWhite) {
+            isPlayerMove = false;
+        }
+    }
+
+    public boolean isPlayerMove() {
+        return isPlayerMove;
     }
 
     private void drawBoard() {
@@ -70,7 +83,7 @@ public class ChessBoard extends GridPane {
 
     private void setupClickHandlers(Piece piece) {
         piece.setOnMouseClicked(event -> {
-            if (piece.isWhite() == chessBoard.isWhiteTurn()) {
+            if ((piece.isWhite() == chessBoard.isWhiteTurn() && isPlayerVsPlayer) || (piece.isWhite() == isPlayerWhite && !isPlayerVsPlayer)) {
                 System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
                 System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
                 resetBoardColors();
@@ -86,6 +99,9 @@ public class ChessBoard extends GridPane {
                     System.out.println("Piece captured: " + piece.getClass().getSimpleName());
                     movePiece(selectedPiece, piece.getPieceX(), piece.getPieceY());
                     selectedPiece = null;
+                    if (!isPlayerVsPlayer) {
+                        isPlayerMove = !isPlayerMove;
+                    }
                 }
             }
             event.consume();
@@ -99,7 +115,6 @@ public class ChessBoard extends GridPane {
                 int finalCol = col;
                 int finalRow = row;
                 square.setOnMouseClicked(event -> {
-                    System.out.println("Square clicked: " + finalCol + ", " + finalRow); // Log the clicked square
                     Piece piece = chessBoard.getPiece(finalCol, finalRow);
                     if (selectedPiece != null) {
                         if (piece == selectedPiece) {
@@ -115,14 +130,20 @@ public class ChessBoard extends GridPane {
                             }
                             movePiece(selectedPiece, finalCol, finalRow);
                             selectedPiece = null;
+                            resetBoardColors();
+                            if (!isPlayerVsPlayer) {
+                                isPlayerMove = !isPlayerMove;
+                            }
                         }
-                    } else if (piece != null && piece.isWhite() == chessBoard.isWhiteTurn()) {
+                    } else if (piece != null && ((piece.isWhite() == chessBoard.isWhiteTurn() && isPlayerVsPlayer) || (piece.isWhite() == isPlayerWhite && !isPlayerVsPlayer))) {
                         System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
                         System.out.println("Piece position: " + piece.getPieceX() + ", " + piece.getPieceY());
                         resetBoardColors();
                         highlightPossibleMoves(piece);
                         selectedPiece = piece;
                         System.out.println("Selected piece: " + selectedPiece.getClass().getSimpleName());
+                        squares[piece.getPieceY()][piece.getPieceX()].setEffect(glow);
+                        squares[piece.getPieceY()][piece.getPieceX()].setFill(Color.rgb(128, 0, 128, 0.10));
                     }
                     event.consume();
                 });
@@ -208,7 +229,6 @@ public class ChessBoard extends GridPane {
             }
         }
 
-
             piece.setPosition(newX, newY);
             updateUIAfterMove(piece, newX, newY, targetPiece);
 
@@ -262,14 +282,26 @@ public class ChessBoard extends GridPane {
         }
     }
 
-    private void checkForCheckmate(){
+    private boolean checkForCheckmate(){
         boolean isWhiteTurn = chessBoard.isWhiteTurn();
-        if (chessBoard.isCheckmate(isWhiteTurn)) {
+        if (chessBoard.isCheckmate(isWhiteTurn) || chessBoard.isCheckmate(!isWhiteTurn)) {
             System.out.println("Checkmate!");
-            System.out.println(isWhiteTurn ? "Black wins!" : "White wins!");
-            String winner = isWhiteTurn ? "Black" : "White";
-            showEndGamePopup(winner);
+            if (!isPlayerVsPlayer) {
+                winnerString = isWhiteTurn ?  "White" : "Black";
+            } else {
+                winnerString = isWhiteTurn ? "Black" : "White";
+            }
+            System.out.println(winnerString + " wins!");
+            this.isCheckmate = true;
+            if (isPlayerVsPlayer) {
+                showEndGamePopup(winnerString);
+            }
         }
+        return this.isCheckmate;
+    }
+
+    public boolean getIsCheckmate(){
+        return checkForCheckmate();
     }
 
     private void updateUIAfterMove(Piece piece, int newX, int newY, Piece targetPiece) {
@@ -325,7 +357,7 @@ public class ChessBoard extends GridPane {
         }
     }
 
-    private void showEndGamePopup(String winner) {
+    public void showEndGamePopup(String winner) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Game Over");
         alert.setHeaderText("Checkmate!");
@@ -335,7 +367,11 @@ public class ChessBoard extends GridPane {
         ButtonType exitButton = new ButtonType("Exit");
         ButtonType downloadGameButton = new ButtonType("Download Game");
 
-        alert.getButtonTypes().setAll(newGameButton, exitButton, downloadGameButton);
+        if (isPlayerVsPlayer) {
+            alert.getButtonTypes().setAll(newGameButton, exitButton, downloadGameButton );
+        } else {
+            alert.getButtonTypes().setAll(exitButton, downloadGameButton);
+        }
 
         alert.showAndWait().ifPresent(buttonType -> {
             if (buttonType == newGameButton) {
@@ -350,5 +386,9 @@ public class ChessBoard extends GridPane {
                 downloadGame(winner);
             }
         });
+    }
+
+    public void setPlayerMove(boolean b) {
+        isPlayerMove = b;
     }
 }

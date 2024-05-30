@@ -26,11 +26,11 @@ public class Bishop extends Piece {
                 if (!board.isMoveWithinBoard(newX, newY)) break;
                 if (board.isSquareOccupied(newX, newY)) {
                     if (board.getPiece(newX, newY).isWhite() != this.isWhite()) {
-                        moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
+                        moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY), null));
                     }
                     break;
                 }
-                moves.add(new Move(x, y, newX, newY, this, null));
+                moves.add(new Move(x, y, newX, newY, this, null, null));
             }
         }
         return moves;

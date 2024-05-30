@@ -20,10 +20,10 @@ public class Pawn extends Piece {
 
         // Ruch o jedno pole do przodu, jeśli pole jest puste
         if (board.isMoveWithinBoard(x, y + direction) && !board.isSquareOccupied(x, y + direction)) {
-            moves.add(new Move(x, y, x, y + direction, this, null));
+            moves.add(new Move(x, y, x, y + direction, this, null, null));
             // Ruch o dwa pola do przodu, jeśli pionek jest na swoim początkowym polu
             if (!hasMoved() && !board.isSquareOccupied(x, y + 2 * direction)) {
-                moves.add(new Move(x, y, x, y + 2 * direction, this, null));
+                moves.add(new Move(x, y, x, y + 2 * direction, this, null, null));
             }
         }
 
@@ -33,7 +33,7 @@ public class Pawn extends Piece {
             if (board.isMoveWithinBoard(x + attackDirection, y + direction)) {
                 Piece piece = board.getPiece(x + attackDirection, y + direction);
                 if (piece != null && piece.isWhite() != this.isWhite()) {
-                    moves.add(new Move(x, y, x + attackDirection, y + direction, this, piece));
+                    moves.add(new Move(x, y, x + attackDirection, y + direction, this, piece, null));
                 }
             }
         }
@@ -47,7 +47,7 @@ public class Pawn extends Piece {
                 if (y == (isWhite() ? 3 : 4)) {
                     // Sprawdź, czy pionek jest na polu bezpośrednio obok pionka, który wykonał ostatni ruch
                     if (x - lastMove.getEndX() == 1 || x - lastMove.getEndX() == -1) {
-                        moves.add(new Move(x, y, lastMove.getEndX(), y + direction, this, lastMove.getPieceMoved()));
+                        moves.add(new Move(x, y, lastMove.getEndX(), y + direction, this, lastMove.getPieceMoved(), null));
                     }
                 }
             }

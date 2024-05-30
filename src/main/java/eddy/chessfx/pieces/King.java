@@ -24,7 +24,7 @@ public class King extends Piece {
                     int newY = y + dy;
                     if (board.isMoveWithinBoard(newX, newY) &&
                             (!board.isSquareOccupied(newX, newY) || board.getPiece(newX, newY).isWhite() != this.isWhite())) {
-                        moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
+                        moves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY), null));
                     }
                 }
             }
@@ -35,12 +35,12 @@ public class King extends Piece {
             //King side
             if (!board.isSquareOccupied(x + 1, y) && !board.isSquareOccupied(x + 2, y) &&
                     board.getPiece(x + 3, y) instanceof Rook && !board.getPiece(x + 3, y).hasMoved()) {
-                moves.add(new Move(x, y, x + 2, y, this, board.getPiece(x + 3, y)));
+                moves.add(new Move(x, y, x + 2, y, this, board.getPiece(x + 3, y), null));
             }
             //Queen side
             if (!board.isSquareOccupied(x - 1, y) && !board.isSquareOccupied(x - 2, y) && !board.isSquareOccupied(x - 3, y) &&
                     board.getPiece(x - 4, y) instanceof Rook && !board.getPiece(x - 4, y).hasMoved()) {
-                moves.add(new Move(x, y, x - 2, y, this, board.getPiece(x - 4, y)));
+                moves.add(new Move(x, y, x - 2, y, this, board.getPiece(x - 4, y), null));
             }
         }
 
