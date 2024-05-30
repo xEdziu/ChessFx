@@ -1,5 +1,6 @@
 package eddy.chessfx.ui;
 
+import eddy.chessfx.logic.AI;
 import eddy.chessfx.logic.Board;
 import eddy.chessfx.logic.Move;
 import javafx.animation.AnimationTimer;
@@ -41,7 +42,6 @@ public class ChessApplication extends Application {
         Stage gameModeStage = (Stage) gameModeDialog.getDialogPane().getScene().getWindow();
         gameModeStage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("/images/king-w.png")));
 
-
         Optional<String> gameModeResult = gameModeDialog.showAndWait();
         String gameMode = gameModeResult.orElse("Player vs Player");
 
@@ -61,6 +61,17 @@ public class ChessApplication extends Application {
         }
 
         chessBoard = new ChessBoard(board, isPlayerWhite, gameMode.equals("Player vs Player"));
+
+        chessBoard.setAiMoveRunnable(() -> {
+            if (!chessBoard.isPlayerMove() && gameMode.equals("Player vs AI") && chessBoard.canAiMove()) {
+                System.out.println("AI move");
+                Move bestMove = AI.findBestMove(chessBoard.getChessBoard(), !isPlayerWhite);
+                chessBoard.movePiece(bestMove.getPieceMoved(), bestMove.getEndX(), bestMove.getEndY());
+                chessBoard.setPlayerMove(true);
+                chessBoard.setAiMove(false);
+            }
+        });
+
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -70,12 +81,6 @@ public class ChessApplication extends Application {
                     Platform.runLater(() -> {
                         chessBoard.showEndGamePopup(chessBoard.winnerString);
                     });
-                    return;
-                }
-                if (!chessBoard.isPlayerMove() && gameMode.equals("Player vs AI")) {
-                    //ai logic here
-                    System.out.println("AI move");
-                    chessBoard.setPlayerMove(true);
                 }
             }
         };

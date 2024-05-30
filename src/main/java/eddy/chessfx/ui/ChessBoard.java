@@ -3,6 +3,7 @@ package eddy.chessfx.ui;
 import eddy.chessfx.logic.Board;
 import eddy.chessfx.logic.Move;
 import eddy.chessfx.pieces.*;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -12,16 +13,16 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 import javafx.stage.FileChooser;
+
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class ChessBoard extends GridPane {
@@ -30,27 +31,42 @@ public class ChessBoard extends GridPane {
     private final Board chessBoard;
     private final Rectangle[][] squares = new Rectangle[SIZE][SIZE];
     private final Glow glow = new Glow(0.5);
-    private Piece selectedPiece = null;  // Add this line
+    private Piece selectedPiece = null;
     private boolean isPlayerWhite;
     private boolean isPlayerVsPlayer;
     private boolean isCheckmate = false;
     private boolean isPlayerMove = true;
+    private boolean canAiMove = false;
     public String winnerString = "";
+    private Runnable aiMoveRunnable;
 
     public ChessBoard(Board chessBoard, boolean isPlayerWhite, boolean isPlayerVsPlayer) {
         this.chessBoard = chessBoard;
         drawBoard();
         placePieces();
-        setupSquareClickHandlers();  // Add this line
+        setupSquareClickHandlers();
         this.isPlayerWhite = isPlayerWhite;
         this.isPlayerVsPlayer = isPlayerVsPlayer;
         if (!isPlayerVsPlayer && !isPlayerWhite) {
             isPlayerMove = false;
+            canAiMove = true;
         }
+    }
+
+    public boolean canAiMove() {
+        return canAiMove;
+    }
+
+    public void setAiMove(boolean b) {
+        canAiMove = b;
     }
 
     public boolean isPlayerMove() {
         return isPlayerMove;
+    }
+
+    public void setAiMoveRunnable(Runnable aiMoveRunnable) {
+        this.aiMoveRunnable = aiMoveRunnable;
     }
 
     private void drawBoard() {
@@ -101,6 +117,7 @@ public class ChessBoard extends GridPane {
                     selectedPiece = null;
                     if (!isPlayerVsPlayer) {
                         isPlayerMove = !isPlayerMove;
+                        setAiMove(true);
                     }
                 }
             }
@@ -109,6 +126,7 @@ public class ChessBoard extends GridPane {
     }
 
     private void setupSquareClickHandlers() {
+        setAiMove(false);
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
                 Rectangle square = squares[row][col];
@@ -131,9 +149,10 @@ public class ChessBoard extends GridPane {
                             movePiece(selectedPiece, finalCol, finalRow);
                             selectedPiece = null;
                             resetBoardColors();
-                            if (!isPlayerVsPlayer) {
-                                isPlayerMove = !isPlayerMove;
-                            }
+                        }
+                        if (!isPlayerVsPlayer) {
+                            isPlayerMove = !isPlayerMove;
+                            setAiMove(true);
                         }
                     } else if (piece != null && ((piece.isWhite() == chessBoard.isWhiteTurn() && isPlayerVsPlayer) || (piece.isWhite() == isPlayerWhite && !isPlayerVsPlayer))) {
                         System.out.println("Piece clicked: " + piece.getClass().getSimpleName());
@@ -194,7 +213,7 @@ public class ChessBoard extends GridPane {
 
     }
 
-    private void movePiece(Piece piece, int newX, int newY) {
+    void movePiece(Piece piece, int newX, int newY) {
         Piece targetPiece = chessBoard.getPiece(newX, newY);
         Move proposedMove = new Move(piece.getPieceX(), piece.getPieceY(), newX, newY, piece, targetPiece, null);
 
@@ -229,23 +248,34 @@ public class ChessBoard extends GridPane {
             }
         }
 
-            piece.setPosition(newX, newY);
-            updateUIAfterMove(piece, newX, newY, targetPiece);
+        piece.setPosition(newX, newY);
+        updateUIAfterMove(piece, newX, newY, targetPiece);
 
-            if (piece instanceof Pawn && (newY == 0 || newY == 7)) {
-                System.out.println("Pawn promotion!");
-                String pieceType = showPromotionDialog();
-                chessBoard.removePiece(newX, newY);
-                StackPane cell = getNodeByRowColumnIndex(newY, newX);
-                cell.getChildren().remove(piece);
-                Piece newPiece = createNewPiece(pieceType, piece.isWhite());
-                chessBoard.placePiece(newPiece, newX, newY);
-                updateUIAfterMove(newPiece, newX, newY, null);
-                proposedMove.setPromotionPiece(newPiece);
-            }
+        if (piece instanceof Pawn && (newY == 0 || newY == 7)) {
+            System.out.println("Pawn promotion!");
+            String pieceType = showPromotionDialog();
+            chessBoard.removePiece(newX, newY);
+            StackPane cell = getNodeByRowColumnIndex(newY, newX);
+            cell.getChildren().remove(piece);
+            Piece newPiece = createNewPiece(pieceType, piece.isWhite());
+            chessBoard.placePiece(newPiece, newX, newY);
+            updateUIAfterMove(newPiece, newX, newY, null);
+            proposedMove.setPromotionPiece(newPiece);
+        }
 
-            resetBoardColors();
-            checkForCheckmate();
+        resetBoardColors();
+        checkForCheckmate();
+
+        if (aiMoveRunnable != null) {
+            Platform.runLater(() -> {
+                try {
+                    Thread.sleep(50);  // Opcjonalny krótki czas oczekiwania na synchronizację UI
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                aiMoveRunnable.run();
+            });
+        }
     }
 
     private String showPromotionDialog() {
@@ -282,15 +312,11 @@ public class ChessBoard extends GridPane {
         }
     }
 
-    private boolean checkForCheckmate(){
+    private boolean checkForCheckmate() {
         boolean isWhiteTurn = chessBoard.isWhiteTurn();
         if (chessBoard.isCheckmate(isWhiteTurn) || chessBoard.isCheckmate(!isWhiteTurn)) {
             System.out.println("Checkmate!");
-            if (!isPlayerVsPlayer) {
-                winnerString = isWhiteTurn ?  "White" : "Black";
-            } else {
-                winnerString = isWhiteTurn ? "Black" : "White";
-            }
+            winnerString = isWhiteTurn ? "Black" : "White";
             System.out.println(winnerString + " wins!");
             this.isCheckmate = true;
             if (isPlayerVsPlayer) {
@@ -300,7 +326,7 @@ public class ChessBoard extends GridPane {
         return this.isCheckmate;
     }
 
-    public boolean getIsCheckmate(){
+    public boolean getIsCheckmate() {
         return checkForCheckmate();
     }
 
@@ -368,7 +394,7 @@ public class ChessBoard extends GridPane {
         ButtonType downloadGameButton = new ButtonType("Download Game");
 
         if (isPlayerVsPlayer) {
-            alert.getButtonTypes().setAll(newGameButton, exitButton, downloadGameButton );
+            alert.getButtonTypes().setAll(newGameButton, exitButton, downloadGameButton);
         } else {
             alert.getButtonTypes().setAll(exitButton, downloadGameButton);
         }
@@ -390,5 +416,9 @@ public class ChessBoard extends GridPane {
 
     public void setPlayerMove(boolean b) {
         isPlayerMove = b;
+    }
+
+    public Board getChessBoard() {
+        return this.chessBoard;
     }
 }

@@ -134,9 +134,9 @@ public class Board {
         return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 
-    public boolean isSquareOccupied(int x, int y) {
-        return board[x][y] != null;
-    }
+public boolean isSquareOccupied(int x, int y) {
+    return board[x][y] != null;
+}
 
     public Piece getPiece(int x, int y) {
         if (isMoveWithinBoard(x, y)) {
