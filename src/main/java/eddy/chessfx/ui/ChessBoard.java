@@ -222,7 +222,6 @@ public class ChessBoard extends GridPane {
 
         if (chessBoard.validateMove(proposedMove) && chessBoard.makeMove(proposedMove)) {
             // Check if the move was a castling move
-
             if (proposedMove.isCastlingMove()) {
                 int rookNewX = newX > piece.getPieceX() ? newX - 1 : newX + 1;  // Rook's new position
                 Piece rook = chessBoard.getPiece(rookNewX, newY);
@@ -233,6 +232,7 @@ public class ChessBoard extends GridPane {
                 System.out.println("Rook pos from object: " + rook.getPieceX() + ", " + rook.getPieceY());
             }
 
+            // Check for en passant move
             if (piece instanceof Pawn && Math.abs(newX - piece.getPieceX()) == 1 ) {
                 System.out.println("En passant move!");
                 int capturedPawnY = !piece.isWhite() ? newY - 1 : newY + 1;  // Y position of the captured pawn
@@ -246,35 +246,38 @@ public class ChessBoard extends GridPane {
                     chessBoard.removePiece(newX, capturedPawnY);
                 }
             }
-        }
 
-        piece.setPosition(newX, newY);
-        updateUIAfterMove(piece, newX, newY, targetPiece);
+            // Check for pawn promotion
+            if (piece instanceof Pawn && (newY == 0 || newY == 7)) {
+                System.out.println("Pawn promotion!");
+                String pieceType = showPromotionDialog();
+                chessBoard.removePiece(newX, newY);
+                StackPane cell = getNodeByRowColumnIndex(newY, newX);
+                cell.getChildren().remove(piece);
+                Piece newPiece = createNewPiece(pieceType, piece.isWhite());
+                chessBoard.placePiece(newPiece, newX, newY);
+                updateUIAfterMove(newPiece, newX, newY, null);
+                proposedMove.setPromotionPiece(newPiece);
+            }
 
-        if (piece instanceof Pawn && (newY == 0 || newY == 7)) {
-            System.out.println("Pawn promotion!");
-            String pieceType = showPromotionDialog();
-            chessBoard.removePiece(newX, newY);
-            StackPane cell = getNodeByRowColumnIndex(newY, newX);
-            cell.getChildren().remove(piece);
-            Piece newPiece = createNewPiece(pieceType, piece.isWhite());
-            chessBoard.placePiece(newPiece, newX, newY);
-            updateUIAfterMove(newPiece, newX, newY, null);
-            proposedMove.setPromotionPiece(newPiece);
-        }
-
-        resetBoardColors();
-        checkForCheckmate();
-
-        if (aiMoveRunnable != null) {
+            // Aktualizacja UI musi być wykonana na wątku JavaFX Application
             Platform.runLater(() -> {
-                try {
-                    Thread.sleep(50);  // Opcjonalny krótki czas oczekiwania na synchronizację UI
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                aiMoveRunnable.run();
+                piece.setPosition(newX, newY);
+                updateUIAfterMove(piece, newX, newY, targetPiece);
+                resetBoardColors();
+                checkForCheckmate();
             });
+
+            if (aiMoveRunnable != null) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(50);  // Opcjonalny krótki czas oczekiwania na synchronizację UI
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    aiMoveRunnable.run();
+                }).start();
+            }
         }
     }
 
