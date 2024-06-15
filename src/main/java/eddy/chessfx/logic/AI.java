@@ -11,8 +11,7 @@ public class AI {
 
     public static Move findBestMove(Board board, boolean isWhite) {
         long timeStart = System.currentTimeMillis();
-        Board boardCopy = new Board(board);  // Pobranie kopii tablicy tylko raz
-        Move aiMove = alphaBeta(boardCopy, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, isWhite, isWhite).move;
+        Move aiMove = alphaBeta(board, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, isWhite, isWhite).move;
         long timeEnd = System.currentTimeMillis();
         System.out.println("AI's move: " + aiMove.getPieceMoved().getClass().getSimpleName() + " from "
                 + aiMove.getStartX() + ", " + aiMove.getStartY() + " to " + aiMove.getEndX() + ", " + aiMove.getEndY() + " in " + (timeEnd - timeStart) + " ms");
