@@ -64,7 +64,7 @@ public class ChessApplication extends Application {
 
         chessBoard.setAiMoveRunnable(() -> {
             if (!chessBoard.isPlayerMove() && gameMode.equals("Player vs AI") && chessBoard.canAiMove()) {
-                System.out.println("AI move");
+                System.out.println("AI is thinking...");
                 Move bestMove = AI.findBestMove(chessBoard.getChessBoard(), !isPlayerWhite);
                 chessBoard.movePiece(bestMove.getPieceMoved(), bestMove.getEndX(), bestMove.getEndY());
                 chessBoard.setPlayerMove(true);

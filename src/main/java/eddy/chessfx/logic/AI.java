@@ -10,10 +10,16 @@ public class AI {
     private static final int CHECKMATE_VALUE = 1000000;
 
     public static Move findBestMove(Board board, boolean isWhite) {
-        return alphaBeta(board, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, isWhite, isWhite).move;
+        long timeStart = System.currentTimeMillis();
+        Move aiMove = alphaBeta(board, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, isWhite, isWhite).move;
+        long timeEnd = System.currentTimeMillis();
+        System.out.println("AI's move: " + aiMove.getPieceMoved().getClass().getSimpleName() + " from "
+                + aiMove.getStartX() + ", " + aiMove.getStartY() + " to " + aiMove.getEndX() + ", " + aiMove.getEndY() + " in " + (timeEnd - timeStart) + " ms");
+        return aiMove;
     }
 
     private static MoveEvaluation alphaBeta(Board board, int depth, int alpha, int beta, boolean maximizingPlayer, boolean isWhite) {
+
         if (depth == 0 || board.isCheckmate(!isWhite) || board.isCheckmate(isWhite)) {
             return new MoveEvaluation(evaluateBoard(board, isWhite), null);
         }
