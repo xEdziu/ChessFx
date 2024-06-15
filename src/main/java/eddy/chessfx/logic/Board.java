@@ -350,4 +350,31 @@ public boolean isCheckmate(boolean isWhite) {
             }
         }
     }
+
+    public void undoMove(Move pop) {
+        Piece piece = board[pop.getEndX()][pop.getEndY()];
+        Piece targetPiece = pop.getPieceCaptured();
+        board[pop.getStartX()][pop.getStartY()] = piece;
+        board[pop.getEndX()][pop.getEndY()] = targetPiece;
+        if (piece == null) return;
+        piece.setHasMoved(false);
+        if (pop.isCastlingMove()) {
+            int rookX = pop.getEndX() > pop.getStartX() ? 5 : 3;
+            int rookY = pop.getStartY();
+            Piece rook = board[rookX][rookY];
+            board[pop.getEndX() > pop.getStartX() ? 7 : 0][rookY] = rook;
+            board[rookX][rookY] = null;
+            rook.setPosition(pop.getEndX() > pop.getStartX() ? 7 : 0, rookY);
+            rook.setHasMoved(false);
+        }
+        if (pop.getPromotionPiece() != null) {
+            board[pop.getStartX()][pop.getStartY()] = new Pawn(pop.getPieceMoved().isWhite());
+        }
+        if (pop.getPieceCaptured() != null) {
+            board[pop.getEndX()][pop.getEndY()] = pop.getPieceCaptured();
+        }
+        moveHistory.remove(pop);
+        lastMove = moveHistory.isEmpty() ? null : moveHistory.get(moveHistory.size() - 1);
+        setWhiteTurn(!isWhiteTurn());
+    }
 }

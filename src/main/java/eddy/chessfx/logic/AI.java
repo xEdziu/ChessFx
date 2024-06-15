@@ -3,11 +3,13 @@ package eddy.chessfx.logic;
 import eddy.chessfx.pieces.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class AI {
 
-    private static final int MAX_DEPTH = 2;  // Ustaw mniejszą głębokość, np. 2 lub 3
+    private static final int MAX_DEPTH = 2;
     private static final int CHECKMATE_VALUE = 1000000;
+    private static Stack<Move> moveStack = new Stack<>();
 
     public static Move findBestMove(Board board, boolean isWhite) {
         long timeStart = System.currentTimeMillis();
@@ -19,7 +21,6 @@ public class AI {
     }
 
     private static MoveEvaluation alphaBeta(Board board, int depth, int alpha, int beta, boolean maximizingPlayer, boolean isWhite) {
-
         if (depth == 0 || board.isCheckmate(!isWhite) || board.isCheckmate(isWhite)) {
             return new MoveEvaluation(evaluateBoard(board, isWhite), null);
         }
@@ -30,9 +31,10 @@ public class AI {
         if (maximizingPlayer) {
             int maxEval = Integer.MIN_VALUE;
             for (Move move : moves) {
-                Board tempBoard = new Board(board);
-                tempBoard.makeMove(move);
-                int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false, isWhite).evaluation;
+                pushMove(board, move);
+                board.makeMove(move);
+                int eval = alphaBeta(board, depth - 1, alpha, beta, false, isWhite).evaluation;
+                board.undoMove(moveStack.pop());
                 if (eval > maxEval) {
                     maxEval = eval;
                     bestMove = move;
@@ -46,9 +48,10 @@ public class AI {
         } else {
             int minEval = Integer.MAX_VALUE;
             for (Move move : moves) {
-                Board tempBoard = new Board(board);
-                tempBoard.makeMove(move);
-                int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true, isWhite).evaluation;
+                pushMove(board, move);
+                board.makeMove(move);
+                int eval = alphaBeta(board, depth - 1, alpha, beta, true, isWhite).evaluation;
+                board.undoMove(moveStack.pop());
                 if (eval < minEval) {
                     minEval = eval;
                     bestMove = move;
@@ -79,7 +82,6 @@ public class AI {
                 }
             }
         }
-        // Najpierw zwracamy ruchy bijące, potem pozostałe ruchy
         captureMoves.addAll(nonCaptureMoves);
         return captureMoves;
     }
@@ -109,7 +111,6 @@ public class AI {
     }
 
     private static int controlCenter(Board board, boolean isWhite) {
-        // Heurystyka kontroli centrum planszy
         int control = 0;
         int[][] centerSquares = {{3, 3}, {3, 4}, {4, 3}, {4, 4}};
         for (int[] square : centerSquares) {
@@ -122,7 +123,6 @@ public class AI {
     }
 
     private static int development(Board board, boolean isWhite) {
-        // Heurystyka rozwoju figur (na początku gry bardziej wartościowe są figury w grze)
         int development = 0;
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
@@ -138,13 +138,12 @@ public class AI {
     }
 
     private static int kingSafety(Board board, boolean isWhite) {
-        // Heurystyka bezpieczeństwa króla
         int safety = 0;
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 Piece piece = board.getPiece(x, y);
                 if (piece instanceof King && piece.isWhite() == isWhite) {
-                    safety += (x > 1 && x < 6) ? -20 : 20;  // Król bezpieczniejszy, gdy jest w rogu
+                    safety += (x > 1 && x < 6) ? -20 : 20;
                 }
             }
         }
@@ -181,6 +180,14 @@ public class AI {
             return piece.isWhite() ? BoardValues.KING[63 - index] : BoardValues.KING[index];
         }
         return 0;
+    }
+
+    private static void pushMove(Board board, Move move) {
+        moveStack.push(move);
+    }
+
+    private static void popMove(Board board) {
+        board.undoMove(moveStack.pop());
     }
 
     private static class MoveEvaluation {
